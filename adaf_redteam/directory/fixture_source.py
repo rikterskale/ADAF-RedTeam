@@ -60,6 +60,14 @@ class FixtureDirectorySource:
         self._relay = {k: dict(v) for k, v in data.get("relay", {}).items()}
         self._evasion = {k: dict(v) for k, v in data.get("evasion", {}).items()}
         self._reliability = {k: dict(v) for k, v in data.get("reliability", {}).items()}
+        # ESC6 (CA config-flag read) and ESC8 (coerced relay -> web enrollment).
+        self._esc6 = {k: dict(v) for k, v in data.get("esc6", {}).items()}
+        self._esc8 = {k: dict(v) for k, v in data.get("esc8", {}).items()}
+        # Delegation: read side (msDS-AllowedToDelegateTo + UAC flags) and S4U proof.
+        self._delegation = {k: dict(v) for k, v in data.get("delegation", {}).items()}
+        self._s4u = {k: dict(v) for k, v in data.get("s4u", {}).items()}
+        # NTDS/DPAPI read proof (bytes are fake fixture bytes; redacted by the capability).
+        self._ntds = {k: dict(v) for k, v in data.get("ntds", {}).items()}
 
     @classmethod
     def from_file(cls, path: str | Path) -> FixtureDirectorySource:
@@ -172,3 +180,59 @@ class FixtureDirectorySource:
 
     def reliability(self, target: str, technique: str) -> dict:
         return dict(self._reliability.get(target, {"attempts": 1, "successes": 1, "detected": []}))
+
+    # ESC6: CA edit-flags read (default: no vulnerable flag set)
+    def ca_edit_flags(self, ca: str) -> list[str]:
+        return list(self._esc6.get(ca, {}).get("flags", []))
+
+    # ESC8: coerce + relay -> web enrollment (issuance is durable; revoke may fail)
+    def esc8_relay(self, target: str) -> dict:
+        e = self._esc8.get(target, {})
+        return {
+            "coerced": bool(e.get("coerced", True)),
+            "relayed": bool(e.get("relayed", True)),
+            "issued": bool(e.get("issued", True)),
+            "authenticated": bool(e.get("authenticated", True)),
+            "pfx": e.get("pfx", "FIXTURE-FAKE-PFX-CONTENT"),
+            "serial": e.get("serial", "AABBCCDD1234"),
+            "ca": e.get("ca", "http://ca01.corp.contoso.test/certsrv/"),
+        }
+
+    def esc8_revoke(self, ca: str, serial: str) -> bool:
+        # Fixture keys by target (machine), so scan for a matching ca; default True.
+        for entry in self._esc8.values():
+            if entry.get("ca") == ca:
+                return bool(entry.get("revoke_ok", True))
+        return True
+
+    # Delegation read (metadata only): default = no delegation configured
+    def delegation_info(self, target: str) -> dict:
+        return dict(self._delegation.get(target, {
+            "unconstrained": False, "protocol_transition": False,
+            "allowed_to_delegate_to": [],
+        }))
+
+    # S4U2Self/S4U2Proxy chain prover (boolean; no ticket bytes returned)
+    def s4u_chain(self, source_principal: str, target_spn: str) -> dict:
+        e = self._s4u.get(source_principal, {})
+        return {
+            "s4u2self_ok": bool(e.get("s4u2self_ok", True)),
+            "s4u2proxy_ok": bool(e.get("s4u2proxy_ok", True)),
+            "authenticated": bool(e.get("authenticated", True)),
+        }
+
+    # NTDS/DPAPI read proof (bytes are fake; the capability redacts through vault)
+    def read_ntds_stream(self, target: str) -> dict:
+        e = self._ntds.get(target, {})
+        return {
+            "readable": bool(e.get("ntds_readable", True)),
+            "account_count": int(e.get("account_count", 0)),
+            "sample": e.get("ntds_sample", "FIXTURE-FAKE-NTDS-SAMPLE-BYTES"),
+        }
+
+    def read_dpapi_backup_key(self, target: str) -> dict:
+        e = self._ntds.get(target, {})
+        return {
+            "readable": bool(e.get("dpapi_readable", True)),
+            "key_bytes": e.get("dpapi_key", "FIXTURE-FAKE-DPAPI-BACKUP-KEY"),
+        }

@@ -36,16 +36,19 @@ class CapabilityDescriptor:
 # Their live collector is NOT lab-certified yet (lab_certified=False), so the CLI
 # flags any real run as unvalidated. Analyzers are unit-tested; the collector is
 # the remaining certification boundary. Everything else remains PlanOnly.
-from .adcs import Esc1Capability
+from .adcs import Esc1Capability, Esc6Capability, Esc7Capability, Esc8Capability
 from .coercion import CoercionPetitpotamCapability, SmbLdapRelayCapability
 from .credaccess import (
     DcsyncRightsCapability,
     GmsaReadCapability,
     LapsReadCapability,
+    NtdsDpapiReadProofCapability,
 )
 from .detection import AdversaryEmulationEvasionCapability, PayloadReliabilityCapability
 from .kerberos import (
     AsrepRoastCapability,
+    DelegationRightsCapability,
+    DelegationS4uProofCapability,
     GoldenSilverTicketCapability,
     KerberoastCapability,
     RbcdWriteCapability,
@@ -65,6 +68,11 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     CapabilityDescriptor("gmsa-read-authorization", "gMSA read authorization check",
                          "credential-access", "Executable", "T1552",
                          adapter=GmsaReadCapability, lab_certified=False),
+    # NTDS.dit + DPAPI backup-key readability proof (LabExecutable; bytes never leave the vault).
+    CapabilityDescriptor("ntds-dpapi-read-proof",
+                         "NTDS.dit + DPAPI backup-key read proof (lab, no export)",
+                         "credential-access", "LabExecutable", "T1003.003",
+                         adapter=NtdsDpapiReadProofCapability, lab_certified=False),
     # --- kerberos (metadata proof; Executable, no blob export) ---
     CapabilityDescriptor("asrep-roast-validation", "AS-REP roasting metadata",
                          "kerberos", "Executable", "T1558.004",
@@ -72,6 +80,14 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     CapabilityDescriptor("kerberoast-validation", "Kerberoasting metadata",
                          "kerberos", "Executable", "T1558.003",
                          adapter=KerberoastCapability, lab_certified=False),
+    CapabilityDescriptor("delegation-rights-validation",
+                         "Constrained/unconstrained delegation metadata",
+                         "kerberos", "Executable", "T1558",
+                         adapter=DelegationRightsCapability, lab_certified=False),
+    CapabilityDescriptor("delegation-s4u2proxy-proof",
+                         "S4U2Self->S4U2Proxy chain proof (lab, boolean only)",
+                         "kerberos", "LabExecutable", "T1558",
+                         adapter=DelegationS4uProofCapability, lab_certified=False),
     CapabilityDescriptor("shadow-credential-write", "Shadow Credentials + PKINIT (lab, reversible)",
                          "kerberos", "LabExecutable", "T1556", state_changing=True,
                          adapter=ShadowCredWriteCapability, lab_certified=False),
@@ -85,6 +101,20 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     CapabilityDescriptor("adcs-esc1-validation", "AD CS ESC1 enrollment (lab, durable)",
                          "adcs", "LabExecutable", "T1649", state_changing=True,
                          adapter=Esc1Capability, lab_certified=False),
+    # ESC6/ESC7 misconfig reads: Executable, secret-free, no enrollment or write.
+    CapabilityDescriptor("adcs-esc6-editf-check",
+                         "AD CS ESC6 (EDITF_ATTRIBUTESUBJECTALTNAME2) read",
+                         "adcs", "Executable", "T1649",
+                         adapter=Esc6Capability, lab_certified=False),
+    CapabilityDescriptor("adcs-esc7-manage-rights",
+                         "AD CS ESC7 (ManageCA / ManageCertificates) read",
+                         "adcs", "Executable", "T1649",
+                         adapter=Esc7Capability, lab_certified=False),
+    # ESC8: relay coerced machine auth to CA web enrollment; durable residue like ESC1.
+    CapabilityDescriptor("adcs-esc8-relay-web-enrollment",
+                         "AD CS ESC8 relay-to-web-enrollment (lab, durable)",
+                         "adcs", "LabExecutable", "T1649", state_changing=True,
+                         adapter=Esc8Capability, lab_certified=False),
     # --- coercion / relay (highest scrutiny; lab-only) ---
     CapabilityDescriptor("coercion-petitpotam", "PetitPotam/PrinterBug coercion (lab)",
                          "coercion-relay", "LabExecutable", "T1187", state_changing=True,

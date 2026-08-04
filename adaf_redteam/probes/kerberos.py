@@ -1,7 +1,10 @@
-"""Live Kerberos probe. UNVALIDATED (methods raise until lab-certified).
+"""Live Kerberos probes. UNVALIDATED (methods raise until lab-certified).
 
-Returns only metadata (roastability + encryption type). It never returns, writes,
-or exports the crackable AS-REP / TGS blob — that would be secret export.
+LiveKerberosProbe returns only metadata (roastability + encryption type). It
+never returns, writes, or exports the crackable AS-REP / TGS blob.
+
+LiveDelegationProver runs S4U2Self/S4U2Proxy and reports booleans only; the
+requested and forwarded tickets are NEVER returned or exported.
 """
 
 from __future__ import annotations
@@ -32,4 +35,19 @@ class LiveKerberosProbe:
         raise NotImplementedError(
             "TGS metadata probe is not lab-certified. Implement a bounded TGS-REQ, record "
             "obtained + etype, and DISCARD the ticket blob."
+        )
+
+
+class LiveDelegationProver:
+    """S4U2Self + S4U2Proxy chain prover. Boolean-only. Not lab-certified."""
+
+    def __init__(self, domain: str) -> None:
+        _require_deps()
+        self._domain = domain
+
+    def s4u_chain(self, source_principal: str, target_spn: str) -> dict:  # pragma: no cover
+        raise NotImplementedError(
+            "S4U2Self/S4U2Proxy chain prover is intentionally not implemented (lab boundary). "
+            "The certified implementation MUST report booleans only and DISCARD both the "
+            "S4U2Self and S4U2Proxy tickets — no ticket bytes may be returned or exported."
         )

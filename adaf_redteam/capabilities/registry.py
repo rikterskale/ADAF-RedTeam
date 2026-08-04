@@ -38,7 +38,7 @@ from .credaccess import (
     GmsaReadCapability,
     LapsReadCapability,
 )
-from .kerberos import AsrepRoastCapability, KerberoastCapability
+from .kerberos import AsrepRoastCapability, KerberoastCapability, RbcdWriteCapability
 from .netlogon import ZerologonDetectionCapability, ZerologonResetCapability
 
 _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
@@ -61,8 +61,9 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
                          adapter=KerberoastCapability, lab_certified=False),
     CapabilityDescriptor("shadow-credential-write", "Shadow Credentials + PKINIT (lab)",
                          "kerberos", "PlanOnly", "T1556", state_changing=True),
-    CapabilityDescriptor("rbcd-write-validation", "RBCD S4U write (lab)",
-                         "kerberos", "PlanOnly", "T1558", state_changing=True),
+    CapabilityDescriptor("rbcd-write-validation", "RBCD S4U write (lab, reversible)",
+                         "kerberos", "LabExecutable", "T1558", state_changing=True,
+                         adapter=RbcdWriteCapability, lab_certified=False),
     CapabilityDescriptor("golden-silver-ticket", "Golden/silver ticket forgery (lab)",
                          "kerberos", "PlanOnly", "T1558.001", state_changing=True),
     # --- ADCS ---

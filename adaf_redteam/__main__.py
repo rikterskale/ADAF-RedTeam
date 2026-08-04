@@ -3,7 +3,7 @@
 Commands:
   list-capabilities         Show the registry with readiness and technique.
   run --plan-only           Emit the exact plan for a capability. No side effects.
-  run                       Execute (Phase 0: reports no adapter present).
+  run                       Execute an adapter-backed capability (or report none).
 """
 
 from __future__ import annotations
@@ -117,15 +117,27 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
               "(lab_certified=False). Result is UNVALIDATED; certify in a disposable lab "
               "before relying on it.", file=sys.stderr)
 
-    # State-changing capabilities require positive containment before executing.
+    authz = engagement.capability_authz(descriptor.capability_id) or {}
+
+    # State-changing capabilities: honor the cleanup latch, then verify containment.
     containment = None
     if action.state_changing:
         from .containment import probe_domain
-        authz = engagement.capability_authz(descriptor.capability_id) or {}
-        probe = probe_domain(domain, engagement_declares_lab=authz.get("labContainmentRequired", False))
+        from .statechange import is_latched
+        if is_latched(args.out):
+            print("BLOCKED BY LATCH: a prior state-changing cleanup did not verify; "
+                  f"clear the latch in {args.out} after confirming cleanup.", file=sys.stderr)
+            return 3
+        probe = probe_domain(
+            domain,
+            engagement_declares_lab=authz.get("labContainmentRequired", False),
+            lab_ranges=engagement.raw.get("labAddressRanges", []),
+            lab_addresses=engagement.raw.get("labResolvedAddresses", []),
+        )
         if not probe.verified:
-            print(f"BLOCKED BY GATE: containment not verified for {domain}; "
-                  "state-changing execution refused.", file=sys.stderr)
+            failed = [c["name"] for c in probe.checks if not c["passed"]]
+            print(f"BLOCKED BY GATE: containment not verified for {domain} "
+                  f"(failed: {', '.join(failed)}); state-changing execution refused.", file=sys.stderr)
             return 3
         containment = {"verified": True, "probeId": probe.probe_id, "environment": probe.environment}
 
@@ -138,9 +150,10 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
             result = cap.execute()
         except (NotImplementedError, ImportError) as exc:
             print(f"LIVE COLLECTOR NOT CERTIFIED / UNAVAILABLE: {exc}\n"
-                  "Provide --fixture <acl.json> to exercise the pipeline offline.", file=sys.stderr)
+                  "Provide --fixture to exercise the pipeline offline.", file=sys.stderr)
             return 4
-        cleanup = cap.cleanup() if action.state_changing else None
+        if action.state_changing:
+            result.cleanup = cap.cleanup()
         if not descriptor.lab_certified:
             result.assertions.insert(0, "UNVALIDATED: adapter not lab-certified; "
                                      "verify in a disposable lab before relying on this result.")
@@ -156,13 +169,23 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
             state_changing=action.state_changing,
             source_address=action.source_address,
             operator_contact=(engagement.raw.get("operatorContacts") or ["unknown"])[0],
-            risk_ref=(engagement.capability_authz(descriptor.capability_id) or {}).get("riskAcceptanceReference"),
+            risk_ref=authz.get("riskAcceptanceReference"),
             containment=containment,
             budget={"actionsAuthorized": action.max_actions, "actionsUsed": 1,
                     "minIntervalMs": action.min_interval_ms},
         )
-        if cleanup:
-            doc["cleanup"] = cleanup
+        # Persist the redacted transaction journal, if the capability kept one.
+        journal = getattr(cap, "journal", None)
+        if journal:
+            from .evidence import write_journal
+            write_journal(journal, args.out)
+        # Latch the output dir if a state change was not verifiably cleaned up.
+        if result.cleanup and not result.cleanup.get("verified", False):
+            from .statechange import set_latch
+            set_latch(args.out, "cleanup did not verify", capability_id=descriptor.capability_id,
+                      target=action.target)
+            print("LATCHED: cleanup did not verify; further state-changing runs in this "
+                  "output dir are blocked until the latch is cleared.", file=sys.stderr)
         path = write_result(doc, args.out)
 
     print(json.dumps(doc, indent=2))

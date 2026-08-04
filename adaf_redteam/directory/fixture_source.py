@@ -44,6 +44,9 @@ class FixtureDirectorySource:
         self._asrep = dict(data.get("asrep", {}))
         self._tgs = dict(data.get("tgs", {}))
         self._zerologon = dict(data.get("zerologon", {}))
+        # RBCD in-memory lab state: {target: {"current": <principal|None>,
+        #   "s4u_ok": bool, "restore_fails": bool}}
+        self._rbcd = {k: dict(v) for k, v in data.get("rbcd", {}).items()}
 
     @classmethod
     def from_file(cls, path: str | Path) -> FixtureDirectorySource:
@@ -69,3 +72,22 @@ class FixtureDirectorySource:
     # NetlogonProbe (detection only; default = patched)
     def zerologon_detect(self, dc: str, max_attempts: int = 2000) -> dict:
         return self._zerologon or {"accepted_zero_auth": False, "attempts_used": max_attempts}
+
+    # RBCD mutation (in-memory; reversible so the restore path is exercisable)
+    def read_rbcd(self, target: str):
+        return self._rbcd.setdefault(target, {"current": None}).get("current")
+
+    def write_rbcd(self, target: str, principal: str) -> None:
+        self._rbcd.setdefault(target, {})["current"] = principal
+
+    def verify_s4u(self, target: str, principal: str) -> bool:
+        entry = self._rbcd.get(target, {})
+        return bool(entry.get("s4u_ok")) and entry.get("current") == principal
+
+    def clear_rbcd(self, target: str, *, restore_to) -> None:
+        entry = self._rbcd.setdefault(target, {})
+        # A fixture may simulate a failed restore to exercise the cleanup latch.
+        if entry.get("restore_fails"):
+            entry["current"] = "!!unrestored!!"
+        else:
+            entry["current"] = restore_to

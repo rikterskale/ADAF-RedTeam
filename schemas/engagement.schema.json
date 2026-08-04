@@ -26,6 +26,16 @@
     "operatorContacts": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "stopConditions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "prohibitedActions": { "type": "array", "items": { "type": "string" } },
+    "labAddressRanges": {
+      "type": "array",
+      "description": "CIDR range(s) of the disposable lab. Required for state-changing containment.",
+      "items": { "type": "string" }
+    },
+    "labResolvedAddresses": {
+      "type": "array",
+      "description": "Declared IP address(es) of the in-scope lab hosts. Each must fall inside labAddressRanges.",
+      "items": { "type": "string" }
+    },
     "capabilities": {
       "type": "object",
       "description": "Per-capability authorization. Key is the capability id.",

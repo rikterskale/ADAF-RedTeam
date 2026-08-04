@@ -18,7 +18,7 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 See [DESIGN.md](DESIGN.md) for the full architecture and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model.
 
-## Status: Phase 1 (complete)
+## Status: Phase 2 (increment 1)
 
 Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
 schemas, ADAF ingest bridge) is complete. Phase 1 adds read/metadata **proof**
@@ -60,9 +60,32 @@ plan and the warnings. This is the same posture as every other state-changing
 capability (golden-ticket, ESC1, coercion, relay): gated scaffold, no working
 exploit code.
 
-Still `PlanOnly` (DESIGN.md §9): the lab-only state-changing writes (shadow-cred,
-RBCD, ESC1, golden/silver), coercion/relay, exec-proof, and the adversary-
-emulation/evasion capabilities.
+### Phase 2 — lab-only state-changing writes (the containment tier)
+
+Phase 2 builds the state-changing *safety machinery* and one reference reversible
+write:
+
+- **Containment guard** (`containment/probe.py`) now performs a real, offline,
+  fail-closed check: the engagement must declare it is a disposable lab, declare
+  the lab's `labAddressRanges` (CIDRs), and declare `labResolvedAddresses` — and
+  every declared host address must fall inside a declared range. Any missing or
+  out-of-range declaration refuses state-changing execution.
+- **Cleanup latch** (`statechange/`): if a state change is not verifiably cleaned
+  up, the output directory is latched and further state-changing runs are refused
+  until an operator clears it.
+- **`rbcd-write-validation`** — the reference reversible write. It captures the
+  original `msDS-AllowedToActOnBehalfOfOtherIdentity`, writes RBCD granting a
+  controlled principal, verifies S4U, then **restores** the original value and
+  verifies the restore, emitting a redacted transaction journal. The live
+  mutation primitive is the lab-certification boundary (`probes/rbcd.py` raises);
+  the mutate → verify → restore orchestration, journal, and latch are exercised
+  offline via the fixture writer.
+
+Still `PlanOnly` scaffolds (DESIGN.md §9): shadow-cred and ESC1 writes (Phase 2
+increment 2, same reversible/durable pattern), golden/silver, coercion/relay,
+exec-proof, adversary-emulation/evasion, and `zerologon-reset`. As with every
+state-changing capability, their live mutation primitives are intentionally not
+implemented.
 
 ## Install (development)
 

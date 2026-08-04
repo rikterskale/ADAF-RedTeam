@@ -9,7 +9,22 @@
   "operatorContacts": ["purple-team@contoso.test"],
   "stopConditions": ["Stop on customer request", "Stop on production impact"],
   "prohibitedActions": ["Mass targeting", "Persistence", "Secret export"],
+  "labAddressRanges": ["10.10.0.0/16"],
+  "labResolvedAddresses": ["10.10.0.5"],
   "capabilities": {
+    "rbcd-write-validation": {
+      "approved": true,
+      "targets": ["WIN-LAB01$"],
+      "attackTechnique": "T1558",
+      "maximumActions": 1,
+      "minimumIntervalMilliseconds": 5000,
+      "timeoutMilliseconds": 4000,
+      "stateChangingApproved": true,
+      "cleanupRequired": true,
+      "riskAccepted": true,
+      "riskAcceptanceReference": "RA-LAB-RBCD",
+      "labContainmentRequired": true
+    },
     "asrep-roast-validation": {
       "approved": true,
       "targets": ["svc-asrep01"],

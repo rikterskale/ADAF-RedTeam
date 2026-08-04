@@ -7,5 +7,6 @@ never returned or exported — only the fact of roastability and the etype.
 
 from .asrep_roast import AsrepRoastCapability
 from .kerberoast import KerberoastCapability
+from .rbcd_write import RbcdWriteCapability
 
-__all__ = ["AsrepRoastCapability", "KerberoastCapability"]
+__all__ = ["AsrepRoastCapability", "KerberoastCapability", "RbcdWriteCapability"]

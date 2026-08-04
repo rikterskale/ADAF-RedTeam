@@ -45,6 +45,13 @@ from .credaccess import (
     NtdsDpapiReadProofCapability,
 )
 from .detection import AdversaryEmulationEvasionCapability, PayloadReliabilityCapability
+from .discovery import (
+    AclWriteRightsCapability,
+    MachineAccountQuotaCapability,
+    PrivilegedGroupMembershipCapability,
+    SidHistoryInventoryCapability,
+    TrustInventoryCapability,
+)
 from .kerberos import (
     AsrepRoastCapability,
     DelegationRightsCapability,
@@ -73,6 +80,27 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
                          "NTDS.dit + DPAPI backup-key read proof (lab, no export)",
                          "credential-access", "LabExecutable", "T1003.003",
                          adapter=NtdsDpapiReadProofCapability, lab_certified=False),
+    # --- discovery / inventory (Executable, read-only, secret-free) ---
+    CapabilityDescriptor("acl-write-rights-inventory",
+                         "Object takeover-rights inventory (ACL write-side check)",
+                         "discovery", "Executable", "T1098",
+                         adapter=AclWriteRightsCapability, lab_certified=False),
+    CapabilityDescriptor("privileged-group-inventory",
+                         "Transitive members of a privileged group",
+                         "discovery", "Executable", "T1069.002",
+                         adapter=PrivilegedGroupMembershipCapability, lab_certified=False),
+    CapabilityDescriptor("trust-inventory",
+                         "AD trust enumeration + SID-filter status",
+                         "discovery", "Executable", "T1482",
+                         adapter=TrustInventoryCapability, lab_certified=False),
+    CapabilityDescriptor("sidhistory-inventory",
+                         "Accounts carrying non-empty sIDHistory",
+                         "discovery", "Executable", "T1134.005",
+                         adapter=SidHistoryInventoryCapability, lab_certified=False),
+    CapabilityDescriptor("machine-account-quota-check",
+                         "ms-DS-MachineAccountQuota read",
+                         "discovery", "Executable", "T1136.002",
+                         adapter=MachineAccountQuotaCapability, lab_certified=False),
     # --- kerberos (metadata proof; Executable, no blob export) ---
     CapabilityDescriptor("asrep-roast-validation", "AS-REP roasting metadata",
                          "kerberos", "Executable", "T1558.004",

@@ -239,6 +239,94 @@ class LdapDirectorySource:
         raw = self._read_raw_sd(dn, _GMSA_MEMBERSHIP)
         return _trustees_from_sd(raw)
 
+    # --- Discovery methods (read-only LDAP searches) --------------------
+
+    def group_members(self, group_dn: str, *, recursive: bool = True) -> list[dict]:  # pragma: no cover - live I/O
+        """Transitive members of a group via LDAP_MATCHING_RULE_IN_CHAIN."""
+        ldap3, _ = _require_deps()
+        conn = self._bind()
+        if recursive:
+            # 1.2.840.113556.1.4.1941 = LDAP_MATCHING_RULE_IN_CHAIN — expands
+            # nested groups server-side in a single query.
+            search_filter = (f"(&(objectClass=*)"
+                             f"(memberOf:1.2.840.113556.1.4.1941:={group_dn}))")
+        else:
+            search_filter = f"(memberOf={group_dn})"
+        # SUBTREE search of the domain naming context; base is derived from the
+        # group DN's DC= components.
+        base = ",".join(p for p in group_dn.split(",") if p.strip().startswith("DC="))
+        ok = conn.search(
+            search_base=base or group_dn,
+            search_filter=search_filter,
+            search_scope=ldap3.SUBTREE,
+            attributes=["objectClass", "distinguishedName"],
+        )
+        if not ok:
+            raise RuntimeError(f"LDAP group-members search failed: {conn.last_error}")
+        out: list[dict] = []
+        for entry in conn.entries:
+            classes = [str(c).lower() for c in (entry["objectClass"].values or [])]
+            klass = ("computer" if "computer" in classes
+                     else "group" if "group" in classes
+                     else "user" if "user" in classes
+                     else "other")
+            out.append({"dn": str(entry.entry_dn), "class": klass})
+        return out
+
+    def list_trusts(self, domain: str) -> list[dict]:  # pragma: no cover - live I/O
+        """Enumerate (objectClass=trustedDomain) under CN=System,<domain-dn>."""
+        ldap3, _ = _require_deps()
+        conn = self._bind()
+        base = f"CN=System,{_domain_to_dn(domain)}"
+        ok = conn.search(
+            search_base=base,
+            search_filter="(objectClass=trustedDomain)",
+            search_scope=ldap3.SUBTREE,
+            attributes=["trustPartner", "trustDirection", "trustType", "trustAttributes"],
+        )
+        if not ok:
+            raise RuntimeError(f"LDAP trust enumeration failed: {conn.last_error}")
+        return [{
+            "trustPartner": str(e["trustPartner"].value or ""),
+            "trustDirection": int(e["trustDirection"].value or 0),
+            "trustType": int(e["trustType"].value or 0),
+            "trustAttributes": int(e["trustAttributes"].value or 0),
+        } for e in conn.entries]
+
+    def accounts_with_sidhistory(self, domain: str) -> list[dict]:  # pragma: no cover - live I/O
+        """LDAP `(sIDHistory=*)` under the domain naming context."""
+        ldap3, _ = _require_deps()
+        conn = self._bind()
+        ok = conn.search(
+            search_base=_domain_to_dn(domain),
+            search_filter="(sIDHistory=*)",
+            search_scope=ldap3.SUBTREE,
+            attributes=["distinguishedName", "sIDHistory"],
+        )
+        if not ok:
+            raise RuntimeError(f"LDAP sIDHistory search failed: {conn.last_error}")
+        out: list[dict] = []
+        for e in conn.entries:
+            sids = [str(s) for s in (e["sIDHistory"].values or [])]
+            out.append({"dn": str(e.entry_dn), "sidHistory": sids})
+        return out
+
+    def machine_account_quota(self, domain: str) -> int:  # pragma: no cover - live I/O
+        """One-attribute BASE read of ms-DS-MachineAccountQuota on the domain."""
+        ldap3, _ = _require_deps()
+        conn = self._bind()
+        ok = conn.search(
+            search_base=_domain_to_dn(domain),
+            search_filter="(objectClass=*)",
+            search_scope=ldap3.BASE,
+            attributes=["ms-DS-MachineAccountQuota"],
+        )
+        if not ok or not conn.entries:
+            raise RuntimeError(f"LDAP ms-DS-MachineAccountQuota read failed: {conn.last_error}")
+        raw = conn.entries[0]["ms-DS-MachineAccountQuota"].value
+        # Attribute absent -> Windows default of 10.
+        return 10 if raw is None else int(raw)
+
     def close(self) -> None:  # pragma: no cover - live I/O
         if self._conn is not None:
             try:

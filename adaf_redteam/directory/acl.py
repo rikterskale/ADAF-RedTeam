@@ -16,10 +16,24 @@ EXTENDED_RIGHTS = {
     "1131f6aa-9c07-11d1-f79f-00c04fc2dcd2": "DS-Replication-Get-Changes",
     "1131f6ad-9c07-11d1-f79f-00c04fc2dcd2": "DS-Replication-Get-Changes-All",
     "89e95b76-444d-4c62-991a-0facbeda640c": "DS-Replication-Get-Changes-In-Filtered-Set",
+    "00299570-246d-11d0-a768-00aa006e0529": "User-Force-Change-Password",
+    "bf9679c0-0de6-11d0-a285-00aa003049e2": "Self-Membership",  # member attribute self-add
 }
 
 # The two rights whose combination grants full DCSync.
 DCSYNC_RIGHTS = frozenset({"DS-Replication-Get-Changes", "DS-Replication-Get-Changes-All"})
+
+# Rights on an object that let a trustee take it over (change its password,
+# grant themselves any right, alter its DACL/owner, etc.). Used by
+# acl-write-rights-inventory.
+TAKEOVER_RIGHTS = frozenset({
+    "GenericAll",
+    "GenericWrite",
+    "WriteDACL",
+    "WriteOwner",
+    "User-Force-Change-Password",
+    "Self-Membership",
+})
 
 
 @dataclass(frozen=True)

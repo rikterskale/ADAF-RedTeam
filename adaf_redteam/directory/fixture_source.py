@@ -68,6 +68,13 @@ class FixtureDirectorySource:
         self._s4u = {k: dict(v) for k, v in data.get("s4u", {}).items()}
         # NTDS/DPAPI read proof (bytes are fake fixture bytes; redacted by the capability).
         self._ntds = {k: dict(v) for k, v in data.get("ntds", {}).items()}
+        # Discovery caps: privileged-group members, trusts, sIDHistory accounts,
+        # ms-DS-MachineAccountQuota. Each is a plain LDAP read in production;
+        # the fixture just serves canned dicts.
+        self._group_members = {k: list(v) for k, v in data.get("group_members", {}).items()}
+        self._trusts = {k: list(v) for k, v in data.get("trusts", {}).items()}
+        self._sidhistory = {k: list(v) for k, v in data.get("sidhistory", {}).items()}
+        self._mach_quota = dict(data.get("machine_account_quota", {}))
 
     @classmethod
     def from_file(cls, path: str | Path) -> FixtureDirectorySource:
@@ -236,3 +243,20 @@ class FixtureDirectorySource:
             "readable": bool(e.get("dpapi_readable", True)),
             "key_bytes": e.get("dpapi_key", "FIXTURE-FAKE-DPAPI-BACKUP-KEY"),
         }
+
+    # Discovery: privileged-group membership (recursive expansion is opaque here)
+    def group_members(self, group_dn: str, *, recursive: bool = True) -> list[dict]:
+        return list(self._group_members.get(group_dn, []))
+
+    # Discovery: trust inventory
+    def list_trusts(self, domain: str) -> list[dict]:
+        return list(self._trusts.get(domain, []))
+
+    # Discovery: sIDHistory accounts
+    def accounts_with_sidhistory(self, domain: str) -> list[dict]:
+        return list(self._sidhistory.get(domain, []))
+
+    # Discovery: ms-DS-MachineAccountQuota
+    def machine_account_quota(self, domain: str) -> int:
+        # Default of 10 mirrors the AD default when the attribute is absent.
+        return int(self._mach_quota.get(domain, 10))

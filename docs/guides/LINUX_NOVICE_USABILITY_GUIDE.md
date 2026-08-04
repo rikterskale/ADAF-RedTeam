@@ -144,6 +144,8 @@ It creates `out/plan.json` and `out/manifest.json`; it is statically verified on
 
 Exit 0 and “plan written” show success. `plan.json` must say `planOnly: true`; the decision trace states no network, authentication, KDC, mutation, or outbound activity. `E100`–`E109` are scope/safety refusals; `E202` means unavailable live collector.
 
+The full stable error identifier is `ADAF-RT-E202`; it indicates an unavailable live collector.
+
 ## Common Novice Workflows
 
 `doctor` diagnoses prerequisites. `list-capabilities` shows current availability. `reference` prints the generated table. Fixture execution is advanced and requires engagement approval; do not begin with it.

@@ -8,7 +8,11 @@ GUIDES = (
     Path("docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md"),
     Path("docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md"),
 )
-REQUIRED = ("# ADAF-RedTeam", "PARTIALLY VERIFIED", "doctor", "--plan-only", "ADAF-RT-E202")
+REQUIRED = ("# ADAF-RedTeam", "doctor", "--plan-only", "ADAF-RT-E202")
+VALIDATION_STATUS = {
+    Path("docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md"): "PARTIALLY VERIFIED",
+    Path("docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md"): "statically verified only",
+}
 
 
 def main() -> int:
@@ -22,6 +26,9 @@ def main() -> int:
         for value in REQUIRED:
             if value not in text:
                 errors.append(f"{guide}: missing required text {value!r}")
+        status = VALIDATION_STATUS[guide]
+        if status not in text:
+            errors.append(f"{guide}: missing validation status {status!r}")
         if str(guide).replace("\\", "/") not in readme:
             errors.append(f"README.md does not link {guide}")
     if errors:

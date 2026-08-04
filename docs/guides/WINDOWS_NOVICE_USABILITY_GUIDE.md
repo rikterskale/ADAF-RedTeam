@@ -150,6 +150,8 @@ This is the committed example only; it creates `out\plan.json` and `out\manifest
 
 Exit 0 and “plan written” mean success. The plan states `planOnly: true` and its decision trace says no network/authentication/KDC/mutation/outbound activity. `manifest.json` inventories output hashes. `ADAF-RT-E100`–`E109` are scope/safety refusals; follow the printed remedy rather than editing scope to bypass it. `E202` is an unavailable live collector.
 
+The full stable error identifier is `ADAF-RT-E202`; it indicates an unavailable live collector.
+
 ## Common Novice Workflows
 
 Use `doctor` before setup troubleshooting, `list-capabilities` to read availability, and `reference` to print the generated table. Fixture-backed execution is an advanced, engagement-approved workflow; it is not required for first success.

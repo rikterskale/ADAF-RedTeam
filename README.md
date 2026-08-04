@@ -20,6 +20,12 @@ See [DESIGN.md](DESIGN.md) for the full architecture,
 [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for how a capability is promoted
 from `lab_certified=False` to `True`.
 
+For operating documentation, see the [engagement authoring guide](docs/ENGAGEMENT_AUTHORING.md),
+[capability runbooks](docs/CAPABILITY_RUNBOOKS.md),
+[operator lifecycle guide](docs/OPERATOR_LIFECYCLE.md),
+[state-change recovery runbook](docs/STATE_CHANGE_RECOVERY.md), and
+[ADAF bridge integration guide](docs/ADAF_BRIDGE_INTEGRATION.md).
+
 For safe local setup and a no-network plan-only first run, see the
 [Windows guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md),
 [Linux guide](docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md), and the generated
@@ -125,11 +131,19 @@ The remaining state-changing capabilities are now wired as gated scaffolds
   `proof.detection` block (attempted / detected / not-detected). No silent-success
   path.
 
-Every capability is now adapter-backed: **6 Executable** (read/metadata) and
-**10 LabExecutable** (state-changing), **0 PlanOnly**. No capability ships a
+All capabilities described above are adapter-backed and currently uncertified.
+No capability ships a
 working live offensive primitive — each live path raises and is exercised offline
 via `--fixture`, `lab_certified=False` until a disposable-lab test certifies it.
 See [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for the promotion gate.
+
+The current generated registry contains **27 capabilities**: **14 Executable**
+target-class capabilities and **13 LabExecutable** capabilities, with **0
+PlanOnly** entries. This is an authorization classification, not live readiness:
+all current entries have `lab_certified=False`. No capability is currently
+available for live use; its orchestration can be exercised offline via
+`--fixture` until a disposable-lab test certifies its live primitive. See the
+generated [capability reference](docs/CAPABILITY_REFERENCE.md).
 
 ## Install (development)
 

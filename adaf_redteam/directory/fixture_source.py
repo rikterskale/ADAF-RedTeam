@@ -53,6 +53,13 @@ class FixtureDirectorySource:
         # ESC1: {ca: {"issued": bool, "authenticated": bool, "revoke_ok": bool,
         #   "pfx": <str>, "serial": <str>}}
         self._esc1 = {k: dict(v) for k, v in data.get("esc1", {}).items()}
+        # Phase 2 inc 3 fixtures (exec / forge / coercion / relay / evasion / reliability)
+        self._exec = {k: dict(v) for k, v in data.get("exec", {}).items()}
+        self._forge = {k: dict(v) for k, v in data.get("forge", {}).items()}
+        self._coercion = {k: dict(v) for k, v in data.get("coercion", {}).items()}
+        self._relay = {k: dict(v) for k, v in data.get("relay", {}).items()}
+        self._evasion = {k: dict(v) for k, v in data.get("evasion", {}).items()}
+        self._reliability = {k: dict(v) for k, v in data.get("reliability", {}).items()}
 
     @classmethod
     def from_file(cls, path: str | Path) -> FixtureDirectorySource:
@@ -131,3 +138,37 @@ class FixtureDirectorySource:
 
     def revoke(self, ca: str, serial: str) -> bool:
         return bool(self._esc1.get(ca, {}).get("revoke_ok", True))
+
+    # SVCCTL exec proof (benign marker; reversible service removal)
+    def run_marker(self, target: str, marker: str) -> dict:
+        e = self._exec.get(target, {})
+        return {"marker_echoed": bool(e.get("marker_echoed", True)),
+                "exit_code": int(e.get("exit_code", 0))}
+
+    def remove_service(self, target: str) -> bool:
+        return bool(self._exec.get(target, {}).get("service_removed", True))
+
+    # Golden/silver ticket forgery (fake ticket bytes; redacted by the capability)
+    def forge_and_auth(self, principal: str) -> dict:
+        f = self._forge.get(principal, {})
+        return {"auth_ok": bool(f.get("auth_ok", True)), "ticket": "FIXTURE-FAKE-TICKET-BYTES"}
+
+    # Coercion (observation only)
+    def trigger(self, target: str) -> dict:
+        return {"callback_observed": bool(self._coercion.get(target, {}).get("callback_observed", True))}
+
+    # SMB->LDAP relay to shadow cred (reversible)
+    def coerce_and_relay(self, target: str) -> dict:
+        r = self._relay.get(target, {})
+        return {"relayed": bool(r.get("relayed", True)), "written": bool(r.get("written", True)),
+                "privkey": "FIXTURE-FAKE-RELAY-KEY"}
+
+    def remove_shadowcred(self, target: str) -> bool:
+        return bool(self._relay.get(target, {}).get("restore_ok", True))
+
+    # Adversary emulation / evasion + payload reliability (purple-team detection evidence)
+    def emulate(self, target: str, technique: str) -> dict:
+        return dict(self._evasion.get(target, {"detected": [], "not_detected": [technique], "controls": []}))
+
+    def reliability(self, target: str, technique: str) -> dict:
+        return dict(self._reliability.get(target, {"attempts": 1, "successes": 1, "detected": []}))

@@ -18,7 +18,7 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 See [DESIGN.md](DESIGN.md) for the full architecture and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model.
 
-## Status: Phase 2 (increment 2)
+## Status: Phase 2 (complete — all capabilities wired)
 
 Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
 schemas, ADAF ingest bridge) is complete. Phase 1 adds read/metadata **proof**
@@ -99,10 +99,28 @@ Both live primitives (`probes/shadowcred.py`, `probes/adcs.py`) raise; the
 orchestration and secret handling are exercised offline via fixtures, and a test
 asserts the fake secret bytes never appear in any emitted artifact.
 
-Still `PlanOnly` scaffolds (DESIGN.md §9): golden/silver, coercion/relay,
-exec-proof, adversary-emulation/evasion, and `zerologon-reset`. As with every
-state-changing capability, their live mutation primitives are intentionally not
-implemented.
+### Phase 2 increment 3 — the highest-scrutiny scaffolds
+
+The remaining state-changing capabilities are now wired as gated scaffolds
+(orchestration + cleanup + fixture tests; live primitive raises):
+
+- `exec-proof-svcctl` — proof-of-execution via a **fixed benign marker** (echo a
+  nonce), then removes the temporary service. Not a shell; no user command.
+- `golden-silver-ticket` — forgery; the input key and forged ticket are redacted
+  to vault handles and never exported; no directory write.
+- `coercion-petitpotam` — single named target, short-lived listener, **no relay,
+  no persistence**; observation only.
+- `smb-ldap-relay-shadowcred` — coerce → relay → write shadow cred → **remove it**
+  (reversible); any key material redacted.
+- `adversary-emulation-evasion` / `payload-reliability-labtest` — purple-team.
+  Require an ROE `detectionNotification` (gate-enforced) and always emit a
+  `proof.detection` block (attempted / detected / not-detected). No silent-success
+  path.
+
+Every capability is now adapter-backed: **6 Executable** (read/metadata) and
+**10 LabExecutable** (state-changing), **0 PlanOnly**. No capability ships a
+working live offensive primitive — each live path raises and is exercised offline
+via `--fixture`, `lab_certified=False` until a disposable-lab test certifies it.
 
 ## Install (development)
 

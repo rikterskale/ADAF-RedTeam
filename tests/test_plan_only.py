@@ -34,11 +34,19 @@ def test_plan_only_run_succeeds(tmp_path, capsys):
     assert "asrep-roast-validation" in out
 
 
-def test_run_without_plan_only_reports_no_adapter(tmp_path, capsys):
-    # adversary-emulation-evasion is authorized in the example engagement but still PlanOnly.
-    rc = main([
-        "run", "--engagement", ENG, "--capability", "adversary-emulation-evasion",
-        "--source-address", "192.0.2.25", "--out", str(tmp_path),
+def test_run_without_plan_only_reports_no_adapter(tmp_path, capsys, monkeypatch):
+    # Every registered capability now has an adapter, so synthesize a PlanOnly one
+    # to exercise the "no executable adapter" branch.
+    import adaf_redteam.__main__ as m
+    from adaf_redteam.authz.gates import AuthorizedAction
+    from adaf_redteam.capabilities.registry import CapabilityDescriptor
+    fake = CapabilityDescriptor("fake-planonly", "Fake", "test", "PlanOnly", "T1000")
+    monkeypatch.setattr(m, "get_descriptor", lambda cid: fake)
+    monkeypatch.setattr(m, "authorize", lambda *a, **k: AuthorizedAction(
+        "fake-planonly", "t", "T1000", "192.0.2.25", False, False, 1, 0))
+    rc = m.main([
+        "run", "--engagement", ENG, "--capability", "fake-planonly",
+        "--source-address", "192.0.2.25", "--target", "t", "--out", str(tmp_path),
     ])
     assert rc == 4
     assert "NO EXECUTABLE ADAPTER" in capsys.readouterr().err

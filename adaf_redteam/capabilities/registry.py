@@ -37,17 +37,21 @@ class CapabilityDescriptor:
 # flags any real run as unvalidated. Analyzers are unit-tested; the collector is
 # the remaining certification boundary. Everything else remains PlanOnly.
 from .adcs import Esc1Capability
+from .coercion import CoercionPetitpotamCapability, SmbLdapRelayCapability
 from .credaccess import (
     DcsyncRightsCapability,
     GmsaReadCapability,
     LapsReadCapability,
 )
+from .detection import AdversaryEmulationEvasionCapability, PayloadReliabilityCapability
 from .kerberos import (
     AsrepRoastCapability,
+    GoldenSilverTicketCapability,
     KerberoastCapability,
     RbcdWriteCapability,
     ShadowCredWriteCapability,
 )
+from .lateral import SvcctlExecProofCapability
 from .netlogon import ZerologonDetectionCapability, ZerologonResetCapability
 
 _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
@@ -75,26 +79,32 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
                          "kerberos", "LabExecutable", "T1558", state_changing=True,
                          adapter=RbcdWriteCapability, lab_certified=False),
     CapabilityDescriptor("golden-silver-ticket", "Golden/silver ticket forgery (lab)",
-                         "kerberos", "PlanOnly", "T1558.001", state_changing=True),
+                         "kerberos", "LabExecutable", "T1558.001", state_changing=True,
+                         adapter=GoldenSilverTicketCapability, lab_certified=False),
     # --- ADCS (durable residue: issuance is not fully reversible) ---
     CapabilityDescriptor("adcs-esc1-validation", "AD CS ESC1 enrollment (lab, durable)",
                          "adcs", "LabExecutable", "T1649", state_changing=True,
                          adapter=Esc1Capability, lab_certified=False),
     # --- coercion / relay (highest scrutiny; lab-only) ---
     CapabilityDescriptor("coercion-petitpotam", "PetitPotam/PrinterBug coercion (lab)",
-                         "coercion-relay", "PlanOnly", "T1187", state_changing=True),
-    CapabilityDescriptor("smb-ldap-relay-shadowcred", "SMB->LDAP relay to Shadow Cred (lab)",
-                         "coercion-relay", "PlanOnly", "T1557.001", state_changing=True),
+                         "coercion-relay", "LabExecutable", "T1187", state_changing=True,
+                         adapter=CoercionPetitpotamCapability, lab_certified=False),
+    CapabilityDescriptor("smb-ldap-relay-shadowcred", "SMB->LDAP relay to Shadow Cred (lab, reversible)",
+                         "coercion-relay", "LabExecutable", "T1557.001", state_changing=True,
+                         adapter=SmbLdapRelayCapability, lab_certified=False),
     # --- lateral / execution proof ---
-    CapabilityDescriptor("exec-proof-svcctl", "SVCCTL exec proof (benign marker)",
-                         "lateral", "PlanOnly", "T1569.002", state_changing=True),
+    CapabilityDescriptor("exec-proof-svcctl", "SVCCTL exec proof (benign marker, reversible)",
+                         "lateral", "LabExecutable", "T1569.002", state_changing=True,
+                         adapter=SvcctlExecProofCapability, lab_certified=False),
     # --- detection / adversary-emulation (purple team; detection evidence required) ---
     CapabilityDescriptor("adversary-emulation-evasion", "Adversary-emulation TTPs w/ evasion (purple team)",
-                         "detection", "PlanOnly", "T1562",
-                         state_changing=True, requires_detection_notification=True),
+                         "detection", "LabExecutable", "T1562",
+                         state_changing=True, requires_detection_notification=True,
+                         adapter=AdversaryEmulationEvasionCapability, lab_certified=False),
     CapabilityDescriptor("payload-reliability-labtest", "Forged-ticket/relay reliability lab test",
-                         "detection", "PlanOnly", "T1550",
-                         state_changing=True, requires_detection_notification=True),
+                         "detection", "LabExecutable", "T1550",
+                         state_changing=True, requires_detection_notification=True,
+                         adapter=PayloadReliabilityCapability, lab_certified=False),
     # --- netlogon / zerologon ---
     CapabilityDescriptor("zerologon-detection", "Zerologon detection (safe)",
                          "detection", "Executable", "T1210",

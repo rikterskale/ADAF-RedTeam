@@ -1,0 +1,18 @@
+# Evidence / run output — never commit engagement output.
+out/
+*.egg-info/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+build/
+dist/
+.venv/
+venv/
+
+# Never commit real engagement files or results.
+engagement*.json
+!examples/engagement.example.json
+validation-result.json
+validation-linkage.json
+transaction-journal*.jsonl
+containment-verification.json

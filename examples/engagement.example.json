@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "1.0",
+  "engagementId": "ENG-LAB-001",
+  "customer": "Example Lab",
+  "authorizedDomains": ["corp.contoso.test"],
+  "authorizedSourceAddresses": ["192.0.2.25"],
+  "windowStartUtc": "2026-08-01T00:00:00Z",
+  "windowEndUtc": "2026-09-01T00:00:00Z",
+  "operatorContacts": ["purple-team@contoso.test"],
+  "stopConditions": ["Stop on customer request", "Stop on production impact"],
+  "prohibitedActions": ["Mass targeting", "Persistence", "Secret export"],
+  "capabilities": {
+    "asrep-roast-validation": {
+      "approved": true,
+      "targets": ["svc-asrep01"],
+      "attackTechnique": "T1558.004",
+      "maximumActions": 1,
+      "minimumIntervalMilliseconds": 1000,
+      "timeoutMilliseconds": 2000,
+      "stateChangingApproved": false
+    },
+    "adcs-esc1-validation": {
+      "approved": true,
+      "targets": ["CN=CA01,CN=Enrollment Services,CN=Public Key Services"],
+      "attackTechnique": "T1649",
+      "maximumActions": 3,
+      "minimumIntervalMilliseconds": 5000,
+      "timeoutMilliseconds": 4000,
+      "stateChangingApproved": true,
+      "cleanupRequired": true,
+      "riskAccepted": true,
+      "riskAcceptanceReference": "RA-LAB-EXAMPLE",
+      "labContainmentRequired": true
+    },
+    "adversary-emulation-evasion": {
+      "approved": true,
+      "targets": ["WIN-LAB01"],
+      "attackTechnique": "T1562",
+      "maximumActions": 5,
+      "minimumIntervalMilliseconds": 3000,
+      "timeoutMilliseconds": 4000,
+      "stateChangingApproved": true,
+      "cleanupRequired": true,
+      "riskAccepted": true,
+      "riskAcceptanceReference": "RA-LAB-PURPLE-01",
+      "labContainmentRequired": true,
+      "detectionNotification": "Notify SOC lead before window; detection evidence required in result"
+    }
+  }
+}

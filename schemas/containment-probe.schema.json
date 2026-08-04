@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/adaf-redteam/containment-probe.schema.json",
+  "title": "ADAF-RedTeam containment probe result",
+  "description": "Recorded before the first state-changing action. Confirms a disposable lab.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["probeId", "probedAtUtc", "domain", "verified", "environment", "checks"],
+  "properties": {
+    "probeId": { "type": "string", "pattern": "^CP-[A-F0-9]{16}$" },
+    "probedAtUtc": { "type": "string", "format": "date-time" },
+    "domain": { "type": "string" },
+    "verified": { "type": "boolean" },
+    "environment": { "enum": ["disposable-lab", "authorized-production", "unknown"] },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "passed"],
+        "properties": {
+          "name": { "type": "string" },
+          "passed": { "type": "boolean" },
+          "detail": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,161 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/adaf-redteam/validation-result.schema.json",
+  "title": "ADAF-RedTeam validation result (the ADAF bridge)",
+  "description": "The ONLY artifact that crosses back into ADAF. Secret-free by construction.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "resultId",
+    "engagementId",
+    "producedByUtc",
+    "producer",
+    "correlatesTo",
+    "capabilityId",
+    "attackTechnique",
+    "target",
+    "verdict",
+    "readinessUsed",
+    "stateChanging",
+    "proof",
+    "authorization",
+    "integrity"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "resultId": { "type": "string", "pattern": "^VR-[A-F0-9]{16}$" },
+    "engagementId": { "type": "string", "pattern": "^ENG-[A-Z0-9-]+$" },
+    "producedByUtc": { "type": "string", "format": "date-time" },
+    "producer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tool", "version"],
+      "properties": {
+        "tool": { "const": "ADAF-RedTeam" },
+        "version": { "type": "string" }
+      }
+    },
+    "correlatesTo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["FindingId", "ControlId"],
+      "properties": {
+        "FindingId": { "type": "string", "pattern": "^F-[A-F0-9]{16}$" },
+        "ControlId": { "type": "string", "pattern": "^ADAF-[A-Z0-9-]+$" }
+      }
+    },
+    "capabilityId": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+    "attackTechnique": { "type": "string", "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$" },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["domain"],
+      "properties": {
+        "domain": { "type": "string" },
+        "principal": { "type": "string" }
+      }
+    },
+    "verdict": { "enum": ["Confirmed", "NotExploitable", "Inconclusive", "BlockedByGate"] },
+    "readinessUsed": { "enum": ["PlanOnly", "LabExecutable", "Executable"] },
+    "stateChanging": { "type": "boolean" },
+    "proof": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["proofClass", "assertions"],
+      "properties": {
+        "proofClass": { "type": "string", "pattern": "^[a-z0-9-]+$" },
+        "assertions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+        "redactedRefs": {
+          "type": "object",
+          "description": "Handles and hashes only. Never secret values.",
+          "additionalProperties": {
+            "type": ["string", "integer"],
+            "description": "Hash, last-4, DN, count, or opaque redacted handle."
+          },
+          "properties": {
+            "secretHandles": {
+              "type": "array",
+              "items": { "type": "string", "pattern": "#redacted" }
+            }
+          }
+        },
+        "detection": {
+          "type": "object",
+          "description": "Purple-team detection evidence for evasion/adversary-emulation capabilities.",
+          "additionalProperties": false,
+          "properties": {
+            "techniquesAttempted": { "type": "array", "items": { "type": "string" } },
+            "controlsObserved": { "type": "array", "items": { "type": "string" } },
+            "detectedBy": { "type": "array", "items": { "type": "string" } },
+            "notDetected": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "authorization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorizedSourceAddress", "operatorContact"],
+      "properties": {
+        "authorizedSourceAddress": { "type": "string" },
+        "operatorContact": { "type": "string" },
+        "riskAcceptanceReference": { "type": "string" }
+      }
+    },
+    "containment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["verified", "environment"],
+      "properties": {
+        "verified": { "type": "boolean" },
+        "probeId": { "type": "string" },
+        "environment": { "enum": ["disposable-lab", "authorized-production", "unknown"] }
+      }
+    },
+    "budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "actionsAuthorized": { "type": "integer", "minimum": 0 },
+        "actionsUsed": { "type": "integer", "minimum": 0 },
+        "minIntervalMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "cleanup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "performed", "verified"],
+      "properties": {
+        "required": { "type": "boolean" },
+        "performed": { "type": "boolean" },
+        "verified": { "type": "boolean" },
+        "durableResidue": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "integrity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resultSha256"],
+      "properties": {
+        "resultSha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "signature": { "type": "string" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "stateChanging": { "const": true } }, "required": ["stateChanging"] },
+      "then": {
+        "required": ["containment", "cleanup"],
+        "properties": {
+          "containment": { "properties": { "verified": { "const": true } } }
+        }
+      }
+    },
+    {
+      "if": { "properties": { "readinessUsed": { "const": "Executable" } } },
+      "then": { "properties": { "stateChanging": { "const": false } } }
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+[project]
+name = "adaf-redteam"
+version = "0.1.0"
+description = "Authorization-first offensive validation tool that feeds redacted results back to ADAF."
+requires-python = ">=3.10"
+dependencies = ["jsonschema>=4.18"]
+
+[project.optional-dependencies]
+# Heavy offensive dependencies are added per-capability in later phases.
+# Phase 0 (skeleton) needs none of them.
+kerberos = []
+adcs = []
+relay = []
+dev = ["ruff>=0.6", "pytest>=8.0", "pip-audit>=2.7"]
+
+[project.scripts]
+adaf-redteam = "adaf_redteam.__main__:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["adaf_redteam*"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

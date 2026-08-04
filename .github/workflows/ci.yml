@@ -1,0 +1,31 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Tests (incl. redaction leak suite)
+        run: pytest -v
+      - name: Dependency audit
+        run: pip-audit || true
+      - name: Secret-leak grep over tracked files
+        run: |
+          # Belt-and-braces: fail if a known secret-shaped test constant escapes into any tracked file.
+          if grep -RIn "S3cr3t-Passw0rd-aabbccddeeff00112233" --include="*.json" --include="*.jsonl" .; then
+            echo "secret-shaped string found in tracked output"; exit 1
+          fi

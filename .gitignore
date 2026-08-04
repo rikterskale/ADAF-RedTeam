@@ -8,6 +8,7 @@ build/
 dist/
 .venv/
 venv/
+review-output/
 
 # Never commit real (operator-created) engagement files or results, anywhere.
 engagement*.json

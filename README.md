@@ -18,29 +18,51 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 See [DESIGN.md](DESIGN.md) for the full architecture and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model.
 
-## Status: Phase 1 (increment 1)
+## Status: Phase 1 (complete)
 
 Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
-schemas, ADAF ingest bridge) is complete. Phase 1 increment 1 adds the first
-**read-only, secret-free** capabilities:
+schemas, ADAF ingest bridge) is complete. Phase 1 adds read/metadata **proof**
+capabilities — all secret-free.
 
-- `dcsync-rights-validation` — reads the domain ACL; proves DCSync replication
-  rights are held. No DRSUAPI replication, no hash extraction.
-- `gmsa-read-authorization` — proves a principal may retrieve a gMSA password.
-  The password value is never read.
-- `laps-read-authorization` — proves a principal may read a LAPS attribute. The
-  value is never read.
+Increment 1 — pure LDAP reads (no offensive packet, no secret):
 
-Each splits into a **pure `analyze()`** (unit-tested) and a **thin live
-collector** (`directory/ldap_source.py`). The live collector is **not
-lab-certified** (`lab_certified=False`): a real `run` prints an UNVALIDATED
-warning and stamps the result until a disposable-lab test certifies it. Use
-`--fixture examples/acl-fixture.example.json` to exercise the full
+- `dcsync-rights-validation` — reads the domain ACL; proves DCSync rights held.
+  No DRSUAPI replication, no hash extraction.
+- `gmsa-read-authorization` — proves gMSA managed-password read authorization;
+  never reads the value.
+- `laps-read-authorization` — proves LAPS-attribute read authorization; never
+  reads the value.
+
+Increment 2 — live-protocol metadata + safe detection:
+
+- `asrep-roast-validation` / `kerberoast-validation` — prove roastability and
+  record the encryption type. The crackable AS-REP / TGS blob is never exported.
+- `zerologon-detection` — SAFE. Detects vulnerability with bounded zero-challenge
+  attempts and **stops before `NetrServerPasswordSet2`**; the machine account is
+  never modified.
+
+Each capability is a **pure `analyze()`** (unit-tested) plus a **thin live
+collector/probe** that ships **`lab_certified=False`** — a real `run` prints an
+UNVALIDATED warning and stamps the result until a disposable-lab test certifies
+it. Use `--fixture examples/acl-fixture.example.json` to run the full
 execute → analyze → bridge pipeline offline.
 
-Everything else remains `PlanOnly`. Still to come (DESIGN.md §9): AS-REP/
-Kerberoast metadata + Zerologon detection (Phase 1 increment 2), then the
-lab-only state-changing and coercion/relay capabilities.
+### `zerologon-reset` — destructive, lab-only, primitive not shipped
+
+The Zerologon "account reset" (`NetrServerPasswordSet2`) is the destructive
+exploit: it zeroes the DC machine-account password and breaks the domain
+controller. It is registered as `state_changing`, **`LabExecutable`** (the
+containment probe refuses non-lab targets), and requires risk acceptance +
+mandatory restore + a cleanup latch. Its destructive primitive is **intentionally
+not implemented** — `execute()` raises, and the containment gate blocks a real run
+before `execute()` is ever reached. `--plan-only` shows the full reset-then-restore
+plan and the warnings. This is the same posture as every other state-changing
+capability (golden-ticket, ESC1, coercion, relay): gated scaffold, no working
+exploit code.
+
+Still `PlanOnly` (DESIGN.md §9): the lab-only state-changing writes (shadow-cred,
+RBCD, ESC1, golden/silver), coercion/relay, exec-proof, and the adversary-
+emulation/evasion capabilities.
 
 ## Install (development)
 

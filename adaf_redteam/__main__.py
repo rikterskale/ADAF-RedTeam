@@ -77,6 +77,12 @@ def _cmd_run(args: argparse.Namespace) -> int:
                 "Plan only — no network, authentication, KDC, mutation, or outbound activity.",
             ],
         }
+        if descriptor.adapter is not None:
+            from .redaction import SecretVault
+            plan_domain = args.domain or (engagement.authorized_domains or [None])[0]
+            with SecretVault() as _v:
+                # plan() is contractually side-effect-free.
+                plan["capabilityPlan"] = descriptor.adapter(action, _v, domain=plan_domain).plan()
         path = write_plan(plan, args.out)
         print(json.dumps(plan, indent=2))
         print(f"\nplan written: {path}")

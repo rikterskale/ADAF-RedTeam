@@ -8,5 +8,13 @@
   "object_acl": [
     {"trustee": "S-1-5-21-EXAMPLE-1104", "right": "ReadProperty", "object_type": "ms-Mcs-AdmPwd", "effect": "Allow"}
   ],
-  "gmsa_readers": ["S-1-5-21-EXAMPLE-1104", "S-1-5-21-EXAMPLE-3003"]
+  "gmsa_readers": ["S-1-5-21-EXAMPLE-1104", "S-1-5-21-EXAMPLE-3003"],
+
+  "asrep": {
+    "svc-asrep01": {"preauth_required": false, "etype": 23}
+  },
+  "tgs": {
+    "MSSQLSvc/db01.corp.contoso.test": {"obtained": true, "etype": 23}
+  },
+  "zerologon": {"accepted_zero_auth": true, "attempts_used": 37}
 }

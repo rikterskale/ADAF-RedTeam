@@ -35,8 +35,9 @@ def test_plan_only_run_succeeds(tmp_path, capsys):
 
 
 def test_run_without_plan_only_reports_no_adapter(tmp_path, capsys):
+    # adcs-esc1-validation is authorized in the example engagement but still PlanOnly.
     rc = main([
-        "run", "--engagement", ENG, "--capability", "asrep-roast-validation",
+        "run", "--engagement", ENG, "--capability", "adcs-esc1-validation",
         "--source-address", "192.0.2.25", "--out", str(tmp_path),
     ])
     assert rc == 4

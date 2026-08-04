@@ -38,6 +38,8 @@ from .credaccess import (
     GmsaReadCapability,
     LapsReadCapability,
 )
+from .kerberos import AsrepRoastCapability, KerberoastCapability
+from .netlogon import ZerologonDetectionCapability, ZerologonResetCapability
 
 _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     # --- credential access (Executable target; read/rights proof, no secret export) ---
@@ -50,11 +52,13 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     CapabilityDescriptor("gmsa-read-authorization", "gMSA read authorization check",
                          "credential-access", "Executable", "T1552",
                          adapter=GmsaReadCapability, lab_certified=False),
-    # --- kerberos (mixed) ---
+    # --- kerberos (metadata proof; Executable, no blob export) ---
     CapabilityDescriptor("asrep-roast-validation", "AS-REP roasting metadata",
-                         "kerberos", "PlanOnly", "T1558.004"),
+                         "kerberos", "Executable", "T1558.004",
+                         adapter=AsrepRoastCapability, lab_certified=False),
     CapabilityDescriptor("kerberoast-validation", "Kerberoasting metadata",
-                         "kerberos", "PlanOnly", "T1558.003"),
+                         "kerberos", "Executable", "T1558.003",
+                         adapter=KerberoastCapability, lab_certified=False),
     CapabilityDescriptor("shadow-credential-write", "Shadow Credentials + PKINIT (lab)",
                          "kerberos", "PlanOnly", "T1556", state_changing=True),
     CapabilityDescriptor("rbcd-write-validation", "RBCD S4U write (lab)",
@@ -79,9 +83,16 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     CapabilityDescriptor("payload-reliability-labtest", "Forged-ticket/relay reliability lab test",
                          "detection", "PlanOnly", "T1550",
                          state_changing=True, requires_detection_notification=True),
-    # --- detection ---
+    # --- netlogon / zerologon ---
     CapabilityDescriptor("zerologon-detection", "Zerologon detection (safe)",
-                         "detection", "PlanOnly", "T1210"),
+                         "detection", "Executable", "T1210",
+                         adapter=ZerologonDetectionCapability, lab_certified=False),
+    # Destructive exploit: reset the DC machine-account password. Lab-only,
+    # containment-gated, reset-then-restore. Primitive intentionally unimplemented.
+    CapabilityDescriptor("zerologon-reset", "Zerologon DC account reset (LAB ONLY, destructive)",
+                         "netlogon", "LabExecutable", "T1210",
+                         state_changing=True,
+                         adapter=ZerologonResetCapability, lab_certified=False),
 )
 
 _BY_ID = {d.capability_id: d for d in _DESCRIPTORS}

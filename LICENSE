@@ -1,11 +1,35 @@
-LICENSE PENDING — DO NOT DISTRIBUTE
+ADAF-RedTeam — Proprietary License
+Copyright (c) 2026 rikterskale. All rights reserved.
 
-The license for ADAF-RedTeam is an open decision (DESIGN.md §10). Until it is
-resolved, treat this repository as "all rights reserved": do not redistribute,
-publish, or use outside the authorizing party.
+1. PROPRIETARY AND CONFIDENTIAL
+   This software, including its source code, schemas, documentation, and all
+   associated materials (the "Software"), is proprietary and confidential to the
+   copyright holder. No license or right is granted to any person or entity to
+   use, copy, modify, merge, publish, distribute, sublicense, sell, or create
+   derivative works of the Software, in whole or in part, except under a separate
+   written agreement signed by the copyright holder.
 
-This tool performs offensive Active Directory validation. It may be run only
-under a written, scoped engagement (see THREAT-MODEL.md and the runtime
-authorization gate). Absence of a chosen open-source license here is deliberate,
-not an oversight — pick MIT vs. a source-available / use-restricted license
-before making the repository public.
+2. AUTHORIZED USE ONLY
+   The Software performs offensive Active Directory validation. Any permitted use
+   granted in writing is further conditioned on a written, scoped engagement that
+   authorizes the specific targets, and on compliance with the runtime
+   authorization controls and the THREAT-MODEL.md guarantees. Use of the Software
+   against systems you are not explicitly authorized to test is prohibited and may
+   be unlawful.
+
+3. NO DISTRIBUTION
+   You may not distribute, disclose, or make the Software available to any third
+   party without prior written permission from the copyright holder.
+
+4. NO WARRANTY
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+
+5. LIMITATION OF LIABILITY
+   IN NO EVENT SHALL THE COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+   OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM, OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+   IN THE SOFTWARE.
+
+For licensing inquiries, contact the copyright holder.

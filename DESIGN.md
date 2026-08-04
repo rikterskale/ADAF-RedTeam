@@ -302,10 +302,9 @@ deliberate, tested, reviewed step per capability.
 
 ## 10. Open decisions for you
 
-1. **License.** ADAF is MIT. A working offensive toolkit under MIT is a choice —
-   consider a source-available / use-restricted license, or keep MIT and lean on
-   the runtime authorization gate. (I'll default to a placeholder LICENSE +
-   THREAT-MODEL until you decide.)
+1. **License.** DECIDED: proprietary / all-rights-reserved (see LICENSE). No
+   redistribution rights are granted; permitted use is conditioned on a written,
+   scoped engagement. Revisit only if the repository is ever opened up.
 2. **Repo visibility.** Private until Phase 1 is reviewed is the safer default.
 3. **Claim verification.** The "custom PAC parser accepted by patched KDCs" /
    "Server 2025 paChecksum2" / "hand-rolled hive parser" claims should each get a

@@ -1,20 +1,20 @@
 """Live Kerberos probes.
 
-`LiveKerberosProbe.asrep` is the implemented, offline-tested primitive for
-`asrep-roast-validation`. It sends one padata-free AS-REQ for the target user
-and returns only the metadata the analyzer needs (whether pre-authentication
-was required and, if not, the encryption type of the AS-REP). The AS-REP's
-encrypted blob (`enc-part.cipher`) — the crackable material — is NEVER read,
-returned, logged, or written. Bounded to the capability's `plan()`: exactly one
-AS-REQ per call, no padata, no post-processing.
+`LiveKerberosProbe.asrep` and `.tgs` are implemented, offline-tested
+primitives. Each returns only the metadata the corresponding analyzer needs
+(roastability + encryption type). The crackable Kerberos material — the AS-REP
+`enc-part.cipher` and the TGS-REP `ticket.enc-part.cipher` — is NEVER read,
+returned, logged, or written. Bounded to each capability's `plan()`: exactly
+one Kerberos request per call, no retries, no post-processing beyond etype
+extraction.
 
-The Kerberoast / TGS metadata probe and the S4U2Self/S4U2Proxy delegation
-prover are still lab-certification boundaries and raise; their orchestration
-is exercised offline via `--fixture`.
+The S4U2Self/S4U2Proxy delegation prover is still a lab-certification boundary
+and raises; its orchestration is exercised offline via `--fixture`.
 
-LDAPS is used for LdapDirectorySource; Kerberos AS traffic is UDP/TCP 88 to the
-KDC. The KDC hostname defaults to the domain (Windows KDCs typically answer on
-the domain SRV record); it can be overridden with `dc=` at construction.
+Kerberos AS/TGS traffic is UDP/TCP 88 to the KDC. The KDC hostname defaults to
+the domain (Windows KDCs typically answer on the domain SRV record); it can be
+overridden with `dc=` at construction. The TGS probe requires an operator TGT
+in the ccache pointed to by `KRB5CCNAME`.
 """
 
 from __future__ import annotations
@@ -106,6 +106,24 @@ def extract_asrep_metadata(response_bytes: bytes) -> dict:
     return {"preauth_required": False, "etype": int(as_rep["enc-part"]["etype"])}
 
 
+def extract_tgs_metadata(response_bytes: bytes) -> dict:
+    """Parse a TGS-REP wire response into metadata-only. Never touches cipher.
+
+    Reads ONLY `ticket.enc-part.etype` — that is the encryption type of the
+    service ticket, which is what determines Kerberoast crackability (RC4 is
+    trivial, AES is not). Neither `ticket.enc-part.cipher` (the crackable
+    service ticket) nor the outer `enc-part.cipher` is read; they cannot leak
+    through the return value.
+    """
+    _require_deps()
+    from impacket.krb5.asn1 import TGS_REP
+    from pyasn1.codec.der.decoder import decode as der_decode
+
+    tgs_rep, _ = der_decode(response_bytes, asn1Spec=TGS_REP())
+    return {"obtained": True,
+            "etype": int(tgs_rep["ticket"]["enc-part"]["etype"])}
+
+
 class LiveKerberosProbe:
     def __init__(self, domain: str, *, dc: str | None = None) -> None:
         _require_deps()
@@ -146,11 +164,63 @@ class LiveKerberosProbe:
             raise RuntimeError(f"AS-REQ failed: {exc}") from exc
         return extract_asrep_metadata(response)
 
-    def tgs(self, spn: str) -> dict:  # pragma: no cover - live I/O
-        raise NotImplementedError(
-            "TGS metadata probe is not lab-certified. Implement a bounded TGS-REQ, record "
-            "obtained + etype, and DISCARD the ticket blob."
-        )
+    def tgs(self, spn: str) -> dict:
+        """Send one bounded TGS-REQ for `spn` and return {obtained, etype}.
+
+        Bounded to plan(): one TGS-REQ, no retries, no post-processing of the
+        response beyond reading `ticket.enc-part.etype`. The crackable service
+        ticket bytes are never read.
+
+        Requires an operator TGT in the ccache pointed to by `KRB5CCNAME`.
+        The TGT is used only to authenticate the TGS-REQ; it is never exported
+        or logged.
+        """
+        import os
+
+        from impacket.krb5 import constants
+        from impacket.krb5.ccache import CCache
+        from impacket.krb5.kerberosv5 import KerberosError, getKerberosTGS
+        from impacket.krb5.types import Principal
+
+        ccname = os.environ.get("KRB5CCNAME")
+        if not ccname or not os.path.exists(ccname):
+            raise RuntimeError(
+                "TGS probe requires an operator TGT: set KRB5CCNAME to a valid "
+                "credentials cache (kinit under Linux, or use MIT ccache on Windows)."
+            )
+
+        ccache = CCache.loadFile(ccname)
+        realm = self._domain.upper()
+        # Fetch a TGT for the target realm from the ccache. Impacket's
+        # getCredential picks the first matching TGT (krbtgt/REALM@REALM).
+        principal = f"krbtgt/{realm}@{realm}"
+        creds = ccache.getCredential(principal)
+        if creds is None:
+            raise RuntimeError(
+                f"no TGT for {principal!r} in ccache {ccname!r}; run kinit first."
+            )
+        tgt, cipher, session_key = creds.toTGT()
+
+        server = Principal(spn, type=constants.PrincipalNameType.NT_SRV_INST.value)
+        kdc = self._dc or self._domain
+        try:
+            # getKerberosTGS returns (raw TGS-REP bytes, cipher, sk, new_sk).
+            # We only use the raw bytes and read `ticket.enc-part.etype`; the
+            # cipher / session-key objects are discarded when this function
+            # returns (they're not stored on self and not returned).
+            response, _cipher, _sk, _new_sk = getKerberosTGS(
+                server, realm, kdc, tgt, cipher, session_key
+            )
+        except KerberosError as exc:
+            code = exc.getErrorCode()
+            if code == constants.ErrorCodes.KDC_ERR_S_PRINCIPAL_UNKNOWN.value:
+                # The SPN doesn't exist in the KDC's database. This is a valid
+                # NotExploitable outcome (nothing to roast for that SPN).
+                return {"obtained": False, "etype": None}
+            # Anything else (clock skew, ticket expired, etype mismatch) is a
+            # live-run failure the operator needs to see.
+            raise RuntimeError(f"TGS-REQ failed: {exc}") from exc
+        return extract_tgs_metadata(response)
 
 
 class LiveDelegationProver:

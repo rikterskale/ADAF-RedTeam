@@ -32,8 +32,8 @@ def analyze(target: str, meta: dict) -> CapabilityResult:
         proof_class=proof_class,
         assertions=[
             f"TRUSTED_FOR_DELEGATION (unconstrained) is {'set' if unconstrained else 'NOT set'}.",
-            f"TRUSTED_TO_AUTH_FOR_DELEGATION (protocol transition / S4U2Self) is "
-            f"{'set' if protocol_transition else 'NOT set'}.",
+            (f"TRUSTED_TO_AUTH_FOR_DELEGATION (protocol transition / S4U2Self) is "
+             f"{'set' if protocol_transition else 'NOT set'}."),
             f"msDS-AllowedToDelegateTo lists {len(allowed)} SPN(s).",
             "Metadata only: no TGT, ST, or S4U ticket was requested.",
         ],

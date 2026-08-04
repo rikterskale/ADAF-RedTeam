@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.invalid/adaf-redteam/engagement.schema.json",
+  "title": "ADAF-RedTeam engagement",
+  "description": "Superset of the ADAF engagement file. Runtime authorization for offensive validation.",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "engagementId",
+    "authorizedDomains",
+    "authorizedSourceAddresses",
+    "windowStartUtc",
+    "windowEndUtc",
+    "operatorContacts",
+    "stopConditions",
+    "capabilities"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "engagementId": { "type": "string", "pattern": "^ENG-[A-Z0-9-]+$" },
+    "customer": { "type": "string" },
+    "authorizedDomains": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "authorizedSourceAddresses": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "windowStartUtc": { "type": "string", "format": "date-time" },
+    "windowEndUtc": { "type": "string", "format": "date-time" },
+    "operatorContacts": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "stopConditions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
+    "prohibitedActions": { "type": "array", "items": { "type": "string" } },
+    "capabilities": {
+      "type": "object",
+      "description": "Per-capability authorization. Key is the capability id.",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["approved", "targets", "attackTechnique", "maximumActions"],
+        "properties": {
+          "approved": { "type": "boolean" },
+          "targets": {
+            "type": "array",
+            "description": "Exact targets. No wildcards, no subtree expansion.",
+            "items": { "type": "string", "not": { "pattern": "[*]" } },
+            "minItems": 1
+          },
+          "attackTechnique": { "type": "string", "pattern": "^T[0-9]{4}(\\.[0-9]{3})?$" },
+          "maximumActions": { "type": "integer", "minimum": 1 },
+          "minimumIntervalMilliseconds": { "type": "integer", "minimum": 0 },
+          "timeoutMilliseconds": { "type": "integer", "minimum": 1 },
+          "stateChangingApproved": { "type": "boolean", "default": false },
+          "cleanupRequired": { "type": "boolean", "default": false },
+          "riskAccepted": { "type": "boolean", "default": false },
+          "riskAcceptanceReference": { "type": "string" },
+          "labContainmentRequired": { "type": "boolean", "default": false },
+          "productionAuthorized": {
+            "type": "boolean",
+            "default": false,
+            "description": "Allow this capability against a non-lab authorized target. Read/metadata proof classes only unless labContainmentRequired is satisfied."
+          },
+          "detectionNotification": {
+            "type": "string",
+            "description": "ROE-defined notification for evasion/adversary-emulation capabilities (e.g. 'notify SOC lead before window')."
+          }
+        },
+        "allOf": [
+          {
+            "if": { "properties": { "stateChangingApproved": { "const": true } } },
+            "then": { "required": ["riskAccepted", "riskAcceptanceReference", "cleanupRequired", "labContainmentRequired"] }
+          }
+        ]
+      }
+    }
+  }
+}

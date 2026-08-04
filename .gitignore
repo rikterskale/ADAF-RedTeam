@@ -9,10 +9,14 @@ dist/
 .venv/
 venv/
 
-# Never commit real engagement files or results.
+# Never commit real (operator-created) engagement files or results, anywhere.
 engagement*.json
-!examples/engagement.example.json
 validation-result.json
 validation-linkage.json
 transaction-journal*.jsonl
 containment-verification.json
+
+# ...but the committed example and schema files are NOT secrets — keep tracked.
+# (These negations must follow the ignores above.)
+!examples/engagement.example.json
+!schemas/*.schema.json

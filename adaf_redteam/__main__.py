@@ -182,20 +182,19 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
                "Supply the ADAF correlation identifiers, or use --plan-only.")
         return 2
 
-    # Optional offline fixture source; live collector is not lab-certified yet.
+    # Optional offline fixture source; live collector is only exercised when the
+    # capability is lab-certified (or the operator explicitly opts in for cert dev).
     source = None
     if args.fixture:
         from .directory.fixture_source import FixtureDirectorySource
         source = FixtureDirectorySource.from_file(args.fixture)
 
-    if not descriptor.lab_certified:
-        print(f"WARNING: '{descriptor.capability_id}' adapter is NOT lab-certified "
-              "(lab_certified=False). Result is UNVALIDATED; certify in a disposable lab "
-              "before relying on it.", file=sys.stderr)
-
     authz = engagement.capability_authz(descriptor.capability_id) or {}
 
     # State-changing capabilities: honor the cleanup latch, then verify containment.
+    # Containment is the primary authorization control and must fire before the
+    # lab-cert gate below — a misdeclared engagement should be refused with the
+    # containment error, not a "not certified" message.
     containment = None
     if action.state_changing:
         from .containment import probe_domain
@@ -216,6 +215,25 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
                    "Correct the lab declaration and independently verify the lab before retrying.")
             return 3
         containment = {"verified": True, "probeId": probe.probe_id, "environment": probe.environment}
+
+    # Lab-certification gate: uncertified capabilities may not touch the network
+    # unless the operator sets ADAF_RT_LAB=1 to acknowledge disposable-lab
+    # certification-dev work (per docs/CERTIFICATION.md).
+    import os as _os
+    lab_dev_opt_in = _os.environ.get("ADAF_RT_LAB") == "1"
+    if source is None and not descriptor.lab_certified and not lab_dev_opt_in:
+        _error("ADAF-RT-E202",
+               f"LIVE COLLECTOR NOT CERTIFIED: '{descriptor.capability_id}' has "
+               "lab_certified=False and no --fixture was provided",
+               "Provide --fixture to exercise the pipeline offline, use --plan-only, "
+               "or set ADAF_RT_LAB=1 to acknowledge certification-dev work in a "
+               "disposable lab (see docs/CERTIFICATION.md).")
+        return 4
+
+    if not descriptor.lab_certified:
+        print(f"WARNING: '{descriptor.capability_id}' adapter is NOT lab-certified "
+              "(lab_certified=False). Result is UNVALIDATED; certify in a disposable lab "
+              "before relying on it.", file=sys.stderr)
 
     from .bridge import build_result, write_result
     from .redaction import SecretVault

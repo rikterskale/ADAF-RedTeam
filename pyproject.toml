@@ -8,8 +8,9 @@ requires-python = ">=3.10"
 dependencies = ["jsonschema>=4.18"]
 
 [project.optional-dependencies]
-# Heavy offensive dependencies are added per-capability in later phases.
-# Phase 0 (skeleton) needs none of them.
+# Heavy offensive dependencies are added per-capability, behind extras.
+# The Phase 1 read-only collector needs ldap3 (+ impacket for SD parsing).
+ldap = ["ldap3>=2.9", "impacket>=0.11"]
 kerberos = []
 adcs = []
 relay = []

@@ -7,9 +7,20 @@ from adaf_redteam.capabilities.registry import get_descriptor, list_descriptors
 ENG = "examples/engagement.example.json"
 
 
-def test_every_capability_is_planonly_with_no_adapter():
+def test_adapter_presence_matches_readiness():
+    # Invariant: a capability has an executable adapter iff it is no longer PlanOnly.
     for d in list_descriptors():
-        assert d.adapter is None, f"{d.capability_id} must have no adapter in Phase 0"
+        if d.adapter is None:
+            assert d.readiness == "PlanOnly", f"{d.capability_id}: no adapter but not PlanOnly"
+        else:
+            assert d.readiness != "PlanOnly", f"{d.capability_id}: has adapter but still PlanOnly"
+
+
+def test_wired_adapters_are_not_lab_certified_yet():
+    # Phase 1 ships adapters whose live collector is uncertified; results are flagged.
+    for d in list_descriptors():
+        if d.adapter is not None:
+            assert d.lab_certified is False, f"{d.capability_id} certified without a lab test?"
 
 
 def test_plan_only_run_succeeds(tmp_path, capsys):

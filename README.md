@@ -18,21 +18,29 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 See [DESIGN.md](DESIGN.md) for the full architecture and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model.
 
-## Status: Phase 0 (skeleton)
+## Status: Phase 1 (increment 1)
 
-This repository currently contains the **skeleton only** — no working exploit
-code. What exists:
+Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
+schemas, ADAF ingest bridge) is complete. Phase 1 increment 1 adds the first
+**read-only, secret-free** capabilities:
 
-- CLI (`adaf-redteam`) with `list-capabilities` and a `run --plan-only` path.
-- The engagement authorization gate and source-address / target checks.
-- The redaction choke point (secrets → handles) and its test suite.
-- The three schemas: engagement, validation-result (the ADAF bridge),
-  containment-probe.
-- The ADAF ingest bridge (`bridge/adaf_ingest.py`).
+- `dcsync-rights-validation` — reads the domain ACL; proves DCSync replication
+  rights are held. No DRSUAPI replication, no hash extraction.
+- `gmsa-read-authorization` — proves a principal may retrieve a gMSA password.
+  The password value is never read.
+- `laps-read-authorization` — proves a principal may read a LAPS attribute. The
+  value is never read.
 
-Every capability is registered as `PlanOnly`. `run` without `--plan-only` will
-report that no executable adapter is present. Capabilities land in later phases
-(DESIGN.md §9), each behind its readiness state.
+Each splits into a **pure `analyze()`** (unit-tested) and a **thin live
+collector** (`directory/ldap_source.py`). The live collector is **not
+lab-certified** (`lab_certified=False`): a real `run` prints an UNVALIDATED
+warning and stamps the result until a disposable-lab test certifies it. Use
+`--fixture examples/acl-fixture.example.json` to exercise the full
+execute → analyze → bridge pipeline offline.
+
+Everything else remains `PlanOnly`. Still to come (DESIGN.md §9): AS-REP/
+Kerberoast metadata + Zerologon detection (Phase 1 increment 2), then the
+lab-only state-changing and coercion/relay capabilities.
 
 ## Install (development)
 

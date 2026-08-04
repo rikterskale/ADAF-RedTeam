@@ -1,0 +1,12 @@
+{
+  "_comment": "Offline ACE fixture for exercising Phase 1 read-only capabilities without a live DC. Trustees are example SIDs/DNs.",
+  "domain_acl": [
+    {"trustee": "S-1-5-21-EXAMPLE-1104", "right": "DS-Replication-Get-Changes", "effect": "Allow"},
+    {"trustee": "S-1-5-21-EXAMPLE-1104", "right": "DS-Replication-Get-Changes-All", "effect": "Allow"},
+    {"trustee": "S-1-5-21-EXAMPLE-2001", "right": "DS-Replication-Get-Changes", "effect": "Allow"}
+  ],
+  "object_acl": [
+    {"trustee": "S-1-5-21-EXAMPLE-1104", "right": "ReadProperty", "object_type": "ms-Mcs-AdmPwd", "effect": "Allow"}
+  ],
+  "gmsa_readers": ["S-1-5-21-EXAMPLE-1104", "S-1-5-21-EXAMPLE-3003"]
+}

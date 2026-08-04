@@ -61,7 +61,7 @@
         },
         "allOf": [
           {
-            "if": { "properties": { "stateChangingApproved": { "const": true } } },
+            "if": { "properties": { "stateChangingApproved": { "const": true } }, "required": ["stateChangingApproved"] },
             "then": { "required": ["riskAccepted", "riskAcceptanceReference", "cleanupRequired", "labContainmentRequired"] }
           }
         ]

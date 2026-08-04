@@ -34,9 +34,14 @@ class CapabilityResult:
 class Capability(abc.ABC):
     """Base for all capabilities. Subclasses are added in later phases."""
 
-    def __init__(self, action: AuthorizedAction, vault: SecretVault) -> None:
+    def __init__(self, action: AuthorizedAction, vault: SecretVault, *,
+                 domain: str | None = None, source=None) -> None:
         self.action = action
         self.vault = vault
+        self.domain = domain
+        # `source` is an injectable dependency (e.g. a DirectorySource). Live runs
+        # leave it None and the capability builds its own; tests inject a fake.
+        self.source = source
 
     @abc.abstractmethod
     def plan(self) -> dict:

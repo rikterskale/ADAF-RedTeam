@@ -68,10 +68,14 @@
         "assertions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
         "redactedRefs": {
           "type": "object",
-          "description": "Handles and hashes only. Never secret values.",
+          "description": "Handles, hashes, names, counts. Never secret values.",
           "additionalProperties": {
-            "type": ["string", "integer"],
-            "description": "Hash, last-4, DN, count, or opaque redacted handle."
+            "description": "Hash, last-4, DN, count, right-name list, or opaque redacted handle.",
+            "anyOf": [
+              { "type": "string" },
+              { "type": "integer" },
+              { "type": "array", "items": { "type": "string" } }
+            ]
           },
           "properties": {
             "secretHandles": {

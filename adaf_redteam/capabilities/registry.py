@@ -26,18 +26,30 @@ class CapabilityDescriptor:
     state_changing: bool = False
     requires_detection_notification: bool = False
     adapter: type | None = None  # None until a real adapter lands in a later phase
+    lab_certified: bool = False  # True only after a disposable-lab test certifies the live path
 
 
-# NOTE: every entry is PlanOnly in Phase 0. Readiness listed as the *target*
-# state a capability is intended to reach once its adapter passes review.
+# Phase 1 wires read-only, secret-free adapters for the credential-access group.
+# Their live collector is NOT lab-certified yet (lab_certified=False), so the CLI
+# flags any real run as unvalidated. Analyzers are unit-tested; the collector is
+# the remaining certification boundary. Everything else remains PlanOnly.
+from .credaccess import (
+    DcsyncRightsCapability,
+    GmsaReadCapability,
+    LapsReadCapability,
+)
+
 _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
-    # --- credential access (target: Executable, read/rights proof only) ---
+    # --- credential access (Executable target; read/rights proof, no secret export) ---
     CapabilityDescriptor("dcsync-rights-validation", "DCSync replication-rights check",
-                         "credential-access", "PlanOnly", "T1003.006"),
+                         "credential-access", "Executable", "T1003.006",
+                         adapter=DcsyncRightsCapability, lab_certified=False),
     CapabilityDescriptor("laps-read-authorization", "LAPS read authorization check",
-                         "credential-access", "PlanOnly", "T1552"),
+                         "credential-access", "Executable", "T1552",
+                         adapter=LapsReadCapability, lab_certified=False),
     CapabilityDescriptor("gmsa-read-authorization", "gMSA read authorization check",
-                         "credential-access", "PlanOnly", "T1552"),
+                         "credential-access", "Executable", "T1552",
+                         adapter=GmsaReadCapability, lab_certified=False),
     # --- kerberos (mixed) ---
     CapabilityDescriptor("asrep-roast-validation", "AS-REP roasting metadata",
                          "kerberos", "PlanOnly", "T1558.004"),

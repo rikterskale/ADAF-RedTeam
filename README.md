@@ -15,8 +15,10 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 > risk acceptance and lab containment. There is no "quick start" and no
 > credential/loot export path anywhere in this codebase.
 
-See [DESIGN.md](DESIGN.md) for the full architecture and
-[THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model.
+See [DESIGN.md](DESIGN.md) for the full architecture,
+[THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model, and
+[docs/CERTIFICATION.md](docs/CERTIFICATION.md) for how a capability is promoted
+from `lab_certified=False` to `True`.
 
 ## Status: Phase 2 (complete — all capabilities wired)
 
@@ -121,6 +123,7 @@ Every capability is now adapter-backed: **6 Executable** (read/metadata) and
 **10 LabExecutable** (state-changing), **0 PlanOnly**. No capability ships a
 working live offensive primitive — each live path raises and is exercised offline
 via `--fixture`, `lab_certified=False` until a disposable-lab test certifies it.
+See [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for the promotion gate.
 
 ## Install (development)
 

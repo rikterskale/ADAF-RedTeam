@@ -24,7 +24,8 @@ For operating documentation, see the [engagement authoring guide](docs/ENGAGEMEN
 [capability runbooks](docs/CAPABILITY_RUNBOOKS.md),
 [operator lifecycle guide](docs/OPERATOR_LIFECYCLE.md),
 [state-change recovery runbook](docs/STATE_CHANGE_RECOVERY.md), and
-[ADAF bridge integration guide](docs/ADAF_BRIDGE_INTEGRATION.md).
+[ADAF bridge integration guide](docs/ADAF_BRIDGE_INTEGRATION.md). The complete
+CLI syntax is in the [command reference](docs/COMMAND_REFERENCE.md).
 
 For safe local setup and a no-network plan-only first run, see the
 [Windows guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md),

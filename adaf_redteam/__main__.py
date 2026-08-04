@@ -10,17 +10,46 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+from pathlib import Path
 
-from .authz import GateError, authorize, load_engagement
 from .capabilities.registry import get_descriptor, list_descriptors
-from .evidence import write_plan
+from .evidence import write_manifest, write_plan
+from .reference import availability, render_capability_reference
+
+try:
+    from .authz import GateError, authorize, load_engagement
+    _AUTHZ_IMPORT_ERROR = None
+except ImportError as exc:  # Let `doctor` explain a missing base dependency.
+    GateError = Exception
+    authorize = None
+    load_engagement = None
+    _AUTHZ_IMPORT_ERROR = exc
+
+
+def _error(code: str, message: str, remedy: str) -> None:
+    print(f"ERROR [{code}]: {message}\nREMEDY: {remedy}", file=sys.stderr)
+
+
+def _decision_trace(descriptor, action) -> list[dict]:
+    """Safe, non-secret explanation of the authorization decisions for a plan."""
+    return [
+        {"check": "capability-listed-and-approved", "passed": True},
+        {"check": "source-address-authorized", "passed": True, "sourceAddress": action.source_address},
+        {"check": "exact-target-authorized", "passed": True, "target": action.target},
+        {"check": "attack-technique-authorized", "passed": True, "technique": action.technique},
+        {"check": "execution-mode", "passed": True,
+         "detail": "plan-only: no network, authentication, KDC, mutation, or outbound activity"},
+        {"check": "live-availability", "passed": descriptor.lab_certified,
+         "detail": availability(descriptor)},
+    ]
 
 
 def _cmd_list(_args: argparse.Namespace) -> int:
     rows = list_descriptors()
     width = max(len(d.capability_id) for d in rows)
-    print(f"{'CAPABILITY'.ljust(width)}  READINESS      TECH       FLAGS")
+    print(f"{'CAPABILITY'.ljust(width)}  TARGET CLASS   TECH       FLAGS  AVAILABILITY")
     for d in sorted(rows, key=lambda x: (x.group, x.capability_id)):
         flags = []
         if d.state_changing:
@@ -29,22 +58,68 @@ def _cmd_list(_args: argparse.Namespace) -> int:
             flags.append("detection-notify")
         if d.adapter is None:
             flags.append("no-adapter")
-        print(f"{d.capability_id.ljust(width)}  {d.readiness.ljust(13)}  {d.required_technique.ljust(9)}  {', '.join(flags)}")
+        print(f"{d.capability_id.ljust(width)}  {d.readiness.ljust(13)}  {d.required_technique.ljust(9)}  "
+              f"{', '.join(flags) or '-'}  {availability(d)}")
     return 0
 
 
+def _cmd_reference(_args: argparse.Namespace) -> int:
+    print(render_capability_reference(), end="")
+    return 0
+
+
+def _cmd_doctor(args: argparse.Namespace) -> int:
+    checks = []
+    checks.append({"check": "python-version", "passed": sys.version_info >= (3, 10),
+                   "detail": sys.version.split()[0]})
+    try:
+        import jsonschema  # noqa: F401
+        checks.append({"check": "jsonschema-installed", "passed": True, "detail": "available"})
+    except ImportError:
+        checks.append({"check": "jsonschema-installed", "passed": False,
+                       "detail": "run: python -m pip install -e '.[dev]'"})
+    checks.append({"check": "project-metadata", "passed": Path("pyproject.toml").is_file(),
+                   "detail": "pyproject.toml"})
+    checks.append({"check": "example-engagement", "passed": Path("examples/engagement.example.json").is_file(),
+                   "detail": "examples/engagement.example.json"})
+    guides = (Path("docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md"),
+              Path("docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md"))
+    checks.append({"check": "novice-guides", "passed": all(path.is_file() for path in guides),
+                   "detail": "both platform guides must be present"})
+    out_dir = Path(args.out)
+    output_parent = out_dir if out_dir.exists() else out_dir.parent
+    checks.append({"check": "output-directory", "passed": output_parent.is_dir() and os.access(output_parent, os.W_OK),
+                   "detail": str(out_dir)})
+    doc = {"tool": "ADAF-RedTeam", "safe": True, "checks": checks,
+           "next": "Run list-capabilities, then a committed-example --plan-only command. Do not remove --plan-only."}
+    if args.json:
+        print(json.dumps(doc, indent=2))
+    else:
+        print("ADAF-RedTeam doctor (no target contact)")
+        for check in checks:
+            print(f"{'PASS' if check['passed'] else 'FAIL'}  {check['check']}: {check['detail']}")
+        print(doc["next"])
+    return 0 if all(check["passed"] for check in checks) else 1
+
+
 def _cmd_run(args: argparse.Namespace) -> int:
+    if load_engagement is None or authorize is None:
+        _error("ADAF-RT-E204", f"required runtime dependency is unavailable: {_AUTHZ_IMPORT_ERROR}",
+               "Install the base project dependencies, then rerun 'adaf-redteam doctor'.")
+        return 2
     try:
         descriptor = get_descriptor(args.capability)
-    except KeyError as exc:
-        print(f"error: {exc}", file=sys.stderr)
+    except KeyError:
+        _error("ADAF-RT-E200", f"unknown capability '{args.capability}'",
+               "Run 'adaf-redteam list-capabilities' and use an exact capability ID.")
         return 2
 
     engagement = load_engagement(args.engagement)
     authz = engagement.capability_authz(args.capability) or {}
     target = args.target or (authz.get("targets") or [None])[0]
     if not target:
-        print("error: no target given and none authorized in engagement", file=sys.stderr)
+        _error("ADAF-RT-E100", "no target was given and the engagement has no target for this capability",
+               "Supply an exact authorized --target or ask the engagement owner to add one.")
         return 2
 
     try:
@@ -56,7 +131,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
             plan_only=args.plan_only,
         )
     except GateError as exc:
-        print(f"BLOCKED BY GATE: {exc}", file=sys.stderr)
+        _error(exc.code, f"BLOCKED BY GATE: {exc}", exc.remedy)
         return 3
 
     if args.plan_only:
@@ -73,6 +148,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
             "minIntervalMs": action.min_interval_ms,
             "hasAdapter": descriptor.adapter is not None,
             "labCertified": descriptor.lab_certified,
+            "availability": availability(descriptor),
+            "decisionTrace": _decision_trace(descriptor, action),
             "wouldExecute": [
                 "Plan only — no network, authentication, KDC, mutation, or outbound activity.",
             ],
@@ -84,16 +161,15 @@ def _cmd_run(args: argparse.Namespace) -> int:
                 # plan() is contractually side-effect-free.
                 plan["capabilityPlan"] = descriptor.adapter(action, _v, domain=plan_domain).plan()
         path = write_plan(plan, args.out)
+        manifest = write_manifest(args.out, mode="plan-only", capability_id=descriptor.capability_id)
         print(json.dumps(plan, indent=2))
         print(f"\nplan written: {path}")
+        print(f"safe output manifest: {manifest}")
         return 0
 
     if descriptor.adapter is None:
-        print(
-            f"NO EXECUTABLE ADAPTER: '{descriptor.capability_id}' is PlanOnly in this build. "
-            "Re-run with --plan-only, or wait for the capability's adapter phase.",
-            file=sys.stderr,
-        )
+        _error("ADAF-RT-E202", f"'{descriptor.capability_id}' has no executable adapter",
+               "Re-run with --plan-only, or wait for a certified adapter phase.")
         return 4
 
     return _dispatch_execute(args, engagement, descriptor, action, target)
@@ -102,8 +178,8 @@ def _cmd_run(args: argparse.Namespace) -> int:
 def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
     domain = args.domain or (engagement.authorized_domains or [None])[0]
     if not (args.finding_id and args.control_id):
-        print("error: --finding-id and --control-id are required to execute (bridge needs them)",
-              file=sys.stderr)
+        _error("ADAF-RT-E201", "--finding-id and --control-id are required to execute",
+               "Supply the ADAF correlation identifiers, or use --plan-only.")
         return 2
 
     # Optional offline fixture source; live collector is not lab-certified yet.
@@ -125,8 +201,8 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
         from .containment import probe_domain
         from .statechange import is_latched
         if is_latched(args.out):
-            print("BLOCKED BY LATCH: a prior state-changing cleanup did not verify; "
-                  f"clear the latch in {args.out} after confirming cleanup.", file=sys.stderr)
+            _error("ADAF-RT-E203", "BLOCKED BY LATCH: a prior state-changing cleanup did not verify",
+                   f"Verify cleanup before manually clearing the latch in {args.out}.")
             return 3
         probe = probe_domain(
             domain,
@@ -136,8 +212,8 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
         )
         if not probe.verified:
             failed = [c["name"] for c in probe.checks if not c["passed"]]
-            print(f"BLOCKED BY GATE: containment not verified for {domain} "
-                  f"(failed: {', '.join(failed)}); state-changing execution refused.", file=sys.stderr)
+            _error("ADAF-RT-E106", f"containment not verified for {domain} (failed: {', '.join(failed)})",
+                   "Correct the lab declaration and independently verify the lab before retrying.")
             return 3
         containment = {"verified": True, "probeId": probe.probe_id, "environment": probe.environment}
 
@@ -149,8 +225,8 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
         try:
             result = cap.execute()
         except (NotImplementedError, ImportError) as exc:
-            print(f"LIVE COLLECTOR NOT CERTIFIED / UNAVAILABLE: {exc}\n"
-                  "Provide --fixture to exercise the pipeline offline.", file=sys.stderr)
+            _error("ADAF-RT-E202", f"LIVE COLLECTOR NOT CERTIFIED / UNAVAILABLE: {exc}",
+                   "Provide --fixture to exercise the pipeline offline, or use --plan-only.")
             return 4
         if action.state_changing:
             result.cleanup = cap.cleanup()
@@ -187,10 +263,12 @@ def _dispatch_execute(args, engagement, descriptor, action, target) -> int:
             print("LATCHED: cleanup did not verify; further state-changing runs in this "
                   "output dir are blocked until the latch is cleared.", file=sys.stderr)
         path = write_result(doc, args.out)
+        manifest = write_manifest(args.out, mode="execute", capability_id=descriptor.capability_id)
 
     print(json.dumps(doc, indent=2))
     print(f"\nverdict: {doc['verdict']}  ({'LAB-CERTIFIED' if descriptor.lab_certified else 'UNVALIDATED'})")
     print(f"result written: {path}")
+    print(f"safe output manifest: {manifest}")
     return 0
 
 
@@ -199,6 +277,11 @@ def build_parser() -> argparse.ArgumentParser:
     sub = p.add_subparsers(dest="command", required=True)
 
     sub.add_parser("list-capabilities", help="list the capability registry").set_defaults(func=_cmd_list)
+    sub.add_parser("reference", help="print the generated capability reference").set_defaults(func=_cmd_reference)
+    doctor = sub.add_parser("doctor", help="check local prerequisites without contacting a target")
+    doctor.add_argument("--out", default="./out", help="output directory to inspect (not created)")
+    doctor.add_argument("--json", action="store_true", help="emit machine-readable diagnostic output")
+    doctor.set_defaults(func=_cmd_doctor)
 
     run = sub.add_parser("run", help="plan or execute a capability")
     run.add_argument("--engagement", required=True, help="path to engagement file")

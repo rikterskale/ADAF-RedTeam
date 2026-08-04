@@ -18,7 +18,12 @@ if TYPE_CHECKING:
 
 
 class GateError(Exception):
-    """Raised when authorization is refused. The message is safe to log."""
+    """Raised when authorization is refused, with a stable operator-facing code."""
+
+    def __init__(self, code: str, message: str, remedy: str) -> None:
+        super().__init__(message)
+        self.code = code
+        self.remedy = remedy
 
 
 @dataclass(frozen=True)
@@ -44,22 +49,26 @@ def authorize(
     cid = descriptor.capability_id
     authz = engagement.capability_authz(cid)
     if authz is None:
-        raise GateError(f"capability '{cid}' is not listed in the engagement file")
+        raise GateError("ADAF-RT-E100", f"capability '{cid}' is not listed in the engagement file",
+                        "Ask the engagement owner to add and approve the exact capability.")
     if not authz.get("approved", False):
-        raise GateError(f"capability '{cid}' is present but not approved")
+        raise GateError("ADAF-RT-E101", f"capability '{cid}' is present but not approved",
+                        "Do not bypass this gate; obtain written approval in the engagement file.")
 
     if source_address not in engagement.authorized_source_addresses:
-        raise GateError(f"source address '{source_address}' is not authorized")
+        raise GateError("ADAF-RT-E102", f"source address '{source_address}' is not authorized",
+                        "Use an approved operator host or have the engagement owner correct the scope.")
 
     if target not in authz.get("targets", []):
-        raise GateError(f"target '{target}' is not in the authorized target list for '{cid}'")
+        raise GateError("ADAF-RT-E103", f"target '{target}' is not in the authorized target list for '{cid}'",
+                        "Use the exact approved target; do not broaden the target list yourself.")
 
     technique = authz.get("attackTechnique", "")
     if descriptor.required_technique and technique != descriptor.required_technique:
-        raise GateError(
-            f"capability '{cid}' requires technique {descriptor.required_technique}, "
-            f"engagement authorizes {technique or '(none)'}"
-        )
+        raise GateError("ADAF-RT-E104",
+                        f"capability '{cid}' requires technique {descriptor.required_technique}, "
+                        f"engagement authorizes {technique or '(none)'}",
+                        "Have the engagement owner authorize the exact ATT&CK technique.")
 
     state_changing = bool(authz.get("stateChangingApproved", False)) and descriptor.state_changing
     production = bool(authz.get("productionAuthorized", False))
@@ -67,22 +76,25 @@ def authorize(
     # Plan-only never executes, so the state-changing / containment gates do not apply.
     if not plan_only:
         if descriptor.state_changing and not authz.get("stateChangingApproved", False):
-            raise GateError(f"capability '{cid}' is state-changing but not approved for state change")
+            raise GateError("ADAF-RT-E105", f"capability '{cid}' is state-changing but not approved for state change",
+                            "State-changing work requires explicit approval; use --plan-only until it exists.")
         if state_changing:
             for field in ("riskAccepted", "cleanupRequired", "labContainmentRequired"):
                 if not authz.get(field, False):
-                    raise GateError(f"state-changing '{cid}' requires '{field}: true'")
+                    raise GateError("ADAF-RT-E106", f"state-changing '{cid}' requires '{field}: true'",
+                                    "Complete the engagement's risk, cleanup, and lab-containment approvals.")
             if not authz.get("riskAcceptanceReference"):
-                raise GateError(f"state-changing '{cid}' requires a riskAcceptanceReference")
+                raise GateError("ADAF-RT-E107", f"state-changing '{cid}' requires a riskAcceptanceReference",
+                                "Record the approved risk-acceptance reference before retrying.")
         if descriptor.requires_detection_notification and not authz.get("detectionNotification"):
-            raise GateError(
-                f"adversary-emulation capability '{cid}' requires a detectionNotification "
-                "(ROE-defined) before it may run"
-            )
+            raise GateError("ADAF-RT-E108",
+                            f"adversary-emulation capability '{cid}' requires a detectionNotification "
+                            "(ROE-defined) before it may run",
+                            "Add the ROE-defined blue-team notification before retrying.")
         if production and descriptor.state_changing and not authz.get("labContainmentRequired", False):
-            raise GateError(
-                f"'{cid}' is state-changing; production runs still require lab-containment proof"
-            )
+            raise GateError("ADAF-RT-E109",
+                            f"'{cid}' is state-changing; production runs still require lab-containment proof",
+                            "State-changing work must remain containment-verified in a disposable lab.")
 
     return AuthorizedAction(
         capability_id=cid,

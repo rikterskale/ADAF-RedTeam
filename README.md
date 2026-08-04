@@ -20,6 +20,12 @@ See [DESIGN.md](DESIGN.md) for the full architecture,
 [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for how a capability is promoted
 from `lab_certified=False` to `True`.
 
+For safe local setup and a no-network plan-only first run, see the
+[Windows guide](docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md),
+[Linux guide](docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md), and the generated
+[capability reference](docs/CAPABILITY_REFERENCE.md). Start with
+`adaf-redteam doctor`; it checks local prerequisites without contacting a target.
+
 ## Status: Phase 2 (complete — all capabilities wired)
 
 Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three

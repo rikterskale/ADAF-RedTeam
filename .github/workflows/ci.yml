@@ -21,6 +21,10 @@ jobs:
         run: ruff check .
       - name: Tests (incl. redaction leak suite)
         run: pytest -v
+      - name: Generated capability reference is current
+        run: python scripts/generate_capability_reference.py --check
+      - name: Novice guides are present and safely linked
+        run: python scripts/validate_novice_guides.py
       - name: Dependency audit
         run: pip-audit || true
       - name: Secret-leak grep over tracked files

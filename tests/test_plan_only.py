@@ -30,8 +30,11 @@ def test_plan_only_run_succeeds(tmp_path, capsys):
     ])
     assert rc == 0
     assert (tmp_path / "plan.json").exists()
+    assert (tmp_path / "manifest.json").exists()
     out = capsys.readouterr().out
     assert "asrep-roast-validation" in out
+    assert "decisionTrace" in out
+    assert "Uncertified: fixture/orchestration only" in out
 
 
 def test_run_without_plan_only_reports_no_adapter(tmp_path, capsys, monkeypatch):
@@ -49,7 +52,7 @@ def test_run_without_plan_only_reports_no_adapter(tmp_path, capsys, monkeypatch)
         "--source-address", "192.0.2.25", "--target", "t", "--out", str(tmp_path),
     ])
     assert rc == 4
-    assert "NO EXECUTABLE ADAPTER" in capsys.readouterr().err
+    assert "ADAF-RT-E202" in capsys.readouterr().err
 
 
 def test_gate_refuses_unauthorized_source_address():
@@ -60,6 +63,7 @@ def test_gate_refuses_unauthorized_source_address():
         assert False, "should have raised"
     except GateError as e:
         assert "source address" in str(e)
+        assert e.code == "ADAF-RT-E102"
 
 
 def test_gate_refuses_unlisted_target():
@@ -89,3 +93,18 @@ def test_evasion_capability_requires_detection_notification():
     # example engagement DOES supply detectionNotification, so this should pass the gate:
     action = authorize(eng, d, target="WIN-LAB01", source_address="192.0.2.25", plan_only=False)
     assert action.state_changing is True
+
+
+def test_doctor_reports_local_prerequisites(capsys):
+    rc = main(["doctor"])
+    assert rc == 0
+    out = capsys.readouterr().out
+    assert "ADAF-RedTeam doctor" in out
+    assert "no target contact" in out
+
+
+def test_list_capabilities_explains_uncertified_availability(capsys):
+    assert main(["list-capabilities"]) == 0
+    out = capsys.readouterr().out
+    assert "AVAILABILITY" in out
+    assert "Uncertified: fixture/orchestration only" in out

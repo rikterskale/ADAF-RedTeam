@@ -1,8 +1,11 @@
 """Declarative capability registry.
 
-Phase 0: descriptors only. `adapter` is None for every entry, so `run` without
-`--plan-only` reports that no executable adapter exists. Descriptors carry the
-readiness state, required ATT&CK technique, and safety flags the gate enforces.
+Descriptors carry the readiness state, required ATT&CK technique, and safety flags
+the gate enforces. A capability with `adapter=None` is PlanOnly (run without
+`--plan-only` reports no adapter). Wired adapters ship `lab_certified=False` until
+a disposable-lab test certifies their live primitive; their live path raises, so
+real runs are stamped UNVALIDATED and exercised offline via `--fixture`. No
+state-changing capability ships a working live mutation primitive.
 
 Readiness (see DESIGN.md §3):
   PlanOnly       - emits a plan; never touches the network.
@@ -33,12 +36,18 @@ class CapabilityDescriptor:
 # Their live collector is NOT lab-certified yet (lab_certified=False), so the CLI
 # flags any real run as unvalidated. Analyzers are unit-tested; the collector is
 # the remaining certification boundary. Everything else remains PlanOnly.
+from .adcs import Esc1Capability
 from .credaccess import (
     DcsyncRightsCapability,
     GmsaReadCapability,
     LapsReadCapability,
 )
-from .kerberos import AsrepRoastCapability, KerberoastCapability, RbcdWriteCapability
+from .kerberos import (
+    AsrepRoastCapability,
+    KerberoastCapability,
+    RbcdWriteCapability,
+    ShadowCredWriteCapability,
+)
 from .netlogon import ZerologonDetectionCapability, ZerologonResetCapability
 
 _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
@@ -59,16 +68,18 @@ _DESCRIPTORS: tuple[CapabilityDescriptor, ...] = (
     CapabilityDescriptor("kerberoast-validation", "Kerberoasting metadata",
                          "kerberos", "Executable", "T1558.003",
                          adapter=KerberoastCapability, lab_certified=False),
-    CapabilityDescriptor("shadow-credential-write", "Shadow Credentials + PKINIT (lab)",
-                         "kerberos", "PlanOnly", "T1556", state_changing=True),
+    CapabilityDescriptor("shadow-credential-write", "Shadow Credentials + PKINIT (lab, reversible)",
+                         "kerberos", "LabExecutable", "T1556", state_changing=True,
+                         adapter=ShadowCredWriteCapability, lab_certified=False),
     CapabilityDescriptor("rbcd-write-validation", "RBCD S4U write (lab, reversible)",
                          "kerberos", "LabExecutable", "T1558", state_changing=True,
                          adapter=RbcdWriteCapability, lab_certified=False),
     CapabilityDescriptor("golden-silver-ticket", "Golden/silver ticket forgery (lab)",
                          "kerberos", "PlanOnly", "T1558.001", state_changing=True),
-    # --- ADCS ---
-    CapabilityDescriptor("adcs-esc1-validation", "AD CS ESC1 enrollment (lab)",
-                         "adcs", "PlanOnly", "T1649", state_changing=True),
+    # --- ADCS (durable residue: issuance is not fully reversible) ---
+    CapabilityDescriptor("adcs-esc1-validation", "AD CS ESC1 enrollment (lab, durable)",
+                         "adcs", "LabExecutable", "T1649", state_changing=True,
+                         adapter=Esc1Capability, lab_certified=False),
     # --- coercion / relay (highest scrutiny; lab-only) ---
     CapabilityDescriptor("coercion-petitpotam", "PetitPotam/PrinterBug coercion (lab)",
                          "coercion-relay", "PlanOnly", "T1187", state_changing=True),

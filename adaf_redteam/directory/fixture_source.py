@@ -47,6 +47,12 @@ class FixtureDirectorySource:
         # RBCD in-memory lab state: {target: {"current": <principal|None>,
         #   "s4u_ok": bool, "restore_fails": bool}}
         self._rbcd = {k: dict(v) for k, v in data.get("rbcd", {}).items()}
+        # Shadow Credentials: {target: {"links": [...], "pkinit_ok": bool, "restore_fails": bool}}
+        self._shadowcred = {k: dict(v) for k, v in data.get("shadowcred", {}).items()}
+        self._sc_counter = 0
+        # ESC1: {ca: {"issued": bool, "authenticated": bool, "revoke_ok": bool,
+        #   "pfx": <str>, "serial": <str>}}
+        self._esc1 = {k: dict(v) for k, v in data.get("esc1", {}).items()}
 
     @classmethod
     def from_file(cls, path: str | Path) -> FixtureDirectorySource:
@@ -91,3 +97,37 @@ class FixtureDirectorySource:
             entry["current"] = "!!unrestored!!"
         else:
             entry["current"] = restore_to
+
+    # Shadow Credentials mutation (reversible; private key is fake fixture bytes)
+    def read_keycred(self, target: str) -> list:
+        return list(self._shadowcred.setdefault(target, {}).setdefault("links", []))
+
+    def add_keycred(self, target: str) -> dict:
+        self._sc_counter += 1
+        key_id = f"kc-{self._sc_counter}"
+        self._shadowcred.setdefault(target, {}).setdefault("links", []).append(key_id)
+        return {"key_id": key_id, "private_key": b"FIXTURE-FAKE-PRIVATE-KEY-BYTES"}
+
+    def verify_pkinit(self, target: str) -> bool:
+        return bool(self._shadowcred.get(target, {}).get("pkinit_ok"))
+
+    def remove_keycred(self, target: str, key_id: str) -> None:
+        entry = self._shadowcred.setdefault(target, {})
+        if entry.get("restore_fails"):
+            return  # leave the link in place to exercise the cleanup latch
+        entry.setdefault("links", [])
+        if key_id in entry["links"]:
+            entry["links"].remove(key_id)
+
+    # ESC1 enrollment (issuance is durable; revoke may be simulated to fail)
+    def enroll(self, ca: str, *, requested_san: str) -> dict:
+        e = self._esc1.get(ca, {})
+        return {
+            "issued": bool(e.get("issued", True)),
+            "authenticated": bool(e.get("authenticated", True)),
+            "pfx": e.get("pfx", "FIXTURE-FAKE-PFX-CONTENT"),
+            "serial": e.get("serial", "1A2B3C4D8F2A"),
+        }
+
+    def revoke(self, ca: str, serial: str) -> bool:
+        return bool(self._esc1.get(ca, {}).get("revoke_ok", True))

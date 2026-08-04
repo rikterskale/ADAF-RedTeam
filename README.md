@@ -18,7 +18,7 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 See [DESIGN.md](DESIGN.md) for the full architecture and
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model.
 
-## Status: Phase 2 (increment 1)
+## Status: Phase 2 (increment 2)
 
 Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
 schemas, ADAF ingest bridge) is complete. Phase 1 adds read/metadata **proof**
@@ -81,8 +81,25 @@ write:
   the mutate → verify → restore orchestration, journal, and latch are exercised
   offline via the fixture writer.
 
-Still `PlanOnly` scaffolds (DESIGN.md §9): shadow-cred and ESC1 writes (Phase 2
-increment 2, same reversible/durable pattern), golden/silver, coercion/relay,
+Increment 2 adds two more state-changing writes on the same orchestration, with
+the wrinkles that make them worth having:
+
+- **`shadow-credential-write`** — reversible (add `msDS-KeyCredentialLink` →
+  PKINIT → remove), *and* it handles **secret material**: the key credential's
+  private key is redacted to a vault handle the instant it is obtained and
+  discarded. Only the handle id is recorded; the key is never exported. PKINIT
+  proof is a boolean — no ticket/hash returned.
+- **`adcs-esc1-validation`** — the honest hard case. Certificate issuance is
+  **durable**: cleanup revokes (the reversible part, which gates the latch) but
+  reports the issuance as non-restorable `durableResidue` rather than claiming a
+  clean restore. The issued **PFX/private key** is redacted to a handle; only its
+  SHA-256 and serial-last-4 are recorded, never the key.
+
+Both live primitives (`probes/shadowcred.py`, `probes/adcs.py`) raise; the
+orchestration and secret handling are exercised offline via fixtures, and a test
+asserts the fake secret bytes never appear in any emitted artifact.
+
+Still `PlanOnly` scaffolds (DESIGN.md §9): golden/silver, coercion/relay,
 exec-proof, adversary-emulation/evasion, and `zerologon-reset`. As with every
 state-changing capability, their live mutation primitives are intentionally not
 implemented.

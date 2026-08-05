@@ -5,7 +5,6 @@ platform: windows
 canonical_path: docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md
 project_name: ADAF-RedTeam
 target_release: "latest locally verifiable source version: 0.1.0"
-target_commit: b67175ed4c232f32daa05cffc54674cfb65265dc
 support_status: native_supported
 alternative_support_paths: []
 validation_status: partially_verified

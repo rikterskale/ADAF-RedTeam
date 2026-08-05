@@ -163,6 +163,13 @@ this reference.
 `run` produces an error message and remedy on standard error for a controlled
 refusal. The common return statuses are:
 
+The gate validates the engagement structure, capability approval, supplied source
+address, exact target, required ATT&CK technique, and applicable state-change
+controls. It requires `windowStartUtc` and `windowEndUtc` but does **not** compare
+the current time with that window; verify the approved window independently before
+non-plan work. `maximumActions` and `minimumIntervalMilliseconds` are recorded in
+the plan and result, not dispatcher-enforced limits.
+
 | Exit status | Meaning |
 |---:|---|
 | `0` | Command completed successfully. A non-plan fixture result can still be UNVALIDATED. |

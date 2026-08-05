@@ -56,13 +56,16 @@ Do not move from plans or fixtures to live work until the exact capability is
 certified under [CERTIFICATION.md](CERTIFICATION.md). Certification is per
 capability and does not transfer to a related operation or environment. The
 current release has no lab-certified live primitive. Future certification does
-not remove the engagement gate, containment check, action budget, redaction
-vault, cleanup process, or stop-condition obligation.
+not remove the engagement gate, containment check, recorded action budget,
+redaction vault, cleanup process, or stop-condition obligation. The dispatcher
+does not enforce the recorded action budget or pacing; certification evidence must
+demonstrate any capability-specific bounds.
 
 ### 6. Execute, observe, and stop
 
-Operate only within scope and window. Treat any gate refusal as stop-and-correct,
-not an obstacle. Pause on a stop condition, unexpected behavior, suspected
+Operate only within scope and the independently verified approved window. The
+runtime does not compare the current time with the engagement window. Treat any
+gate refusal as stop-and-correct, not an obstacle. Pause on a stop condition, unexpected behavior, suspected
 production contact, redaction concern, or cleanup concern. Preserve artifacts
 and notify the engagement owner. Purple-team work must follow its notification
 plan and preserve truthful detection evidence.

@@ -15,6 +15,9 @@ prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 > conditions, allowed ATT&CK techniques, and (for anything that changes state)
 > risk acceptance and lab containment. The documented safe first run is
 > plan-only; there is no credential/loot export path anywhere in this codebase.
+> The runtime requires time-window fields but does not independently enforce the
+> current time against them; the engagement owner and operator must verify the
+> approved window before any non-plan work.
 
 See [DESIGN.md](DESIGN.md) for the full architecture,
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model, and

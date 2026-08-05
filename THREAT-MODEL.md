@@ -19,10 +19,13 @@ whether defenses detect real techniques.
    not serialize a secret; code review and certification evidence remain required.
 2. **No action without authorization.** Every capability requires a schema-valid
    engagement file, an exact target inside the authorized set, a supplied
-   `--source-address` value inside the authorized set, and the required ATT&CK
-   technique. The CLI does not independently establish the host's source address.
-   State-changing actions additionally require risk acceptance and positive
-   declared-lab containment.
+    `--source-address` value inside the authorized set, and the required ATT&CK
+    technique. The CLI does not independently establish the host's source address.
+    It requires engagement time-window fields but does not compare them with the
+    current time; the operator and engagement owner must independently verify the
+    approved window before non-plan work.
+    State-changing actions additionally require risk acceptance and positive
+    declared-lab containment.
 3. **No mass targeting / no persistence / no C2.** Exact targets only. This tool
    proves access; it does not maintain it.
 4. **Detection stays attached.** Evasion / adversary-emulation capabilities exist

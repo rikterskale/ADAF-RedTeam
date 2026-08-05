@@ -18,9 +18,11 @@ whether defenses detect real techniques.
    schema permits arbitrary strings, so it cannot by itself prove an adapter did
    not serialize a secret; code review and certification evidence remain required.
 2. **No action without authorization.** Every capability requires a schema-valid
-   engagement file, an exact target inside the authorized set, a source address
-   inside the authorized set, and the required ATT&CK technique. State-changing
-   actions additionally require risk acceptance and positive lab containment.
+   engagement file, an exact target inside the authorized set, a supplied
+   `--source-address` value inside the authorized set, and the required ATT&CK
+   technique. The CLI does not independently establish the host's source address.
+   State-changing actions additionally require risk acceptance and positive
+   declared-lab containment.
 3. **No mass targeting / no persistence / no C2.** Exact targets only. This tool
    proves access; it does not maintain it.
 4. **Detection stays attached.** Evasion / adversary-emulation capabilities exist
@@ -31,8 +33,10 @@ whether defenses detect real techniques.
 - **Process boundary:** secrets in, handles out. The redactor is the only door.
 - **Bridge boundary:** only `validation-result.json` (schema-validated,
   secret-free) crosses back into ADAF.
-- **Containment boundary:** state-changing capabilities run only where the
-  containment probe confirms a disposable lab; cleanup failure latches the run.
+- **Containment boundary:** state-changing capabilities run only when the
+  containment probe verifies the engagement's declared lab CIDRs and addresses;
+  it does not perform a live DNS or infrastructure check. Cleanup failure latches
+  the run.
 
 ## Abuse cases explicitly designed against
 - Operator error exporting loot: there is no loot-export code path to invoke.

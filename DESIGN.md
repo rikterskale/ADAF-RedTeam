@@ -74,10 +74,11 @@ of forged-ticket/relay/coercion techniques are **in scope** because they are rea
 parts of authorized red-team and purple-team work — but only under an explicit
 adversary-emulation contract. The gating that makes this defensible:
 
-- **Purple-team framing, enforced.** These capabilities set
-  `requires_detection_notification` and must emit a `proof.detection` block
-  (techniques attempted, controls observed, detected/not-detected). A result with
-  no detection evidence is schema-incomplete for this class.
+- **Purple-team framing, adapter-enforced.** These capabilities set
+  `requires_detection_notification`; their adapters emit a `proof.detection`
+  block (techniques attempted, controls observed, detected/not-detected). The
+  generic result schema does not conditionally require that block by capability,
+  so certification evidence and adapter tests must retain this invariant.
 - **ATT&CK-allowlisted.** T1562 (Impair Defenses), T1070 (Indicator Removal),
   T1550 (Alternate Auth Material), T1558 (Kerberos). The engagement must authorize
   the exact technique.
@@ -121,7 +122,7 @@ Three readiness states, mirrored from ADAF, gate what a capability may do:
 | State | Meaning | Example |
 |---|---|---|
 | `PlanOnly` | Emits the exact plan (targets, budgets, technique). No network, no auth, no KDC, no mutation. | Default for every capability on first landing. |
-| `LabExecutable` | May execute, but only when the containment probe confirms a disposable lab. | golden-ticket, relay-write, ESC1 issuance. |
+| `LabExecutable` | May execute only when the containment probe verifies the engagement's disposable-lab declaration. | golden-ticket, relay-write, ESC1 issuance. |
 | `Executable` | May execute against an authorized production target (read-only proof classes only). | AS-REP metadata, DCSync *rights* check, Kerberoast ticket request. |
 
 State-changing proof classes are **never** promoted to `Executable`. The most a

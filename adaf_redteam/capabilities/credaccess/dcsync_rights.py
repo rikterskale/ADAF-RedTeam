@@ -9,6 +9,7 @@ hashes. Mirrors ADAF's "effective rights only; no DRS proof" contract.
 from __future__ import annotations
 
 from ...directory.acl import DCSYNC_RIGHTS, Ace, effective_rights
+from ...lab_env import lab_bind_password, lab_bind_user, lab_dc
 from ..base import Capability, CapabilityResult
 
 
@@ -50,4 +51,16 @@ class DcsyncRightsCapability(Capability):
 
     def _live_source(self):
         from ...directory.ldap_source import LdapDirectorySource
-        return LdapDirectorySource(self.domain, user=self.action.source_address)
+        # Certification path: explicit bind principal from lab env.
+        # Normal path: prefer Kerberos ccache (user is still required by the
+        # constructor for identity logging; the ccache provides the ticket).
+        bind_user = lab_bind_user() or self.action.source_address
+        server = lab_dc() or self.domain
+        password = lab_bind_password()
+        use_ccache = password is None
+        return LdapDirectorySource(
+            server,
+            user=bind_user,
+            use_kerberos_ccache=use_ccache,
+            password=password,
+        )

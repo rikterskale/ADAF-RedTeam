@@ -7,6 +7,7 @@ returned or written.
 
 from __future__ import annotations
 
+from ...lab_env import lab_dc
 from ...probes import ETYPE_NAMES, WEAK_ETYPES
 from ..base import Capability, CapabilityResult
 
@@ -49,4 +50,6 @@ class AsrepRoastCapability(Capability):
 
     def _live_probe(self):
         from ...probes.kerberos import LiveKerberosProbe
-        return LiveKerberosProbe(self.domain)
+        # Prefer the certification-lab DC when the operator has opted in;
+        # otherwise fall back to domain (SRV) resolution.
+        return LiveKerberosProbe(self.domain, dc=lab_dc())

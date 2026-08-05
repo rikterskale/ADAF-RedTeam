@@ -110,5 +110,6 @@ leak is found. Preserve evidence and re-certify after resolving the issue.
 |---|---|
 | Authoritative policy and tier detail | [CERTIFICATION.md](CERTIFICATION.md) |
 | Coach-and-operator execution | [First Certification Session](guides/CERTIFICATION_NOVICE_COACH_PLAYBOOK.md) |
+| Dedicated GOAD Tier A fixture objects | [GOAD Certification Profile](GOAD_CERTIFICATION_PROFILE.md) |
 | Test inventory/run order | [CERTIFICATION_RUNBOOK.md](CERTIFICATION_RUNBOOK.md) |
 | Capability-specific evidence | [certifications/](certifications/) |

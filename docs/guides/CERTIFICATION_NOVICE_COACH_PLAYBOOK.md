@@ -175,6 +175,7 @@ The operator does not promote the capability.
 | Need | Document |
 |---|---|
 | Policy, review, promotion, or de-certification | [Certification Standard and Maintainer Checklist](../ADAF-RedTeam_Capability_Certification_Howto.md) |
+| Coach setup of dedicated GOAD lab objects | [GOAD Certification Profile](../GOAD_CERTIFICATION_PROFILE.md) |
 | Authoritative rules | [CERTIFICATION.md](../CERTIFICATION.md) |
 | Capability-specific evidence | [certifications/](../certifications/) |
 | Safe plan-only first use | [Windows novice guide](WINDOWS_NOVICE_USABILITY_GUIDE.md) |

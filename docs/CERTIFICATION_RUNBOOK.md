@@ -5,6 +5,11 @@ capabilities. It does **not** authorize production use and does **not** flip
 `lab_certified` flags. Promotion still requires the evidence package +
 independent reviewer sign-off in `docs/CERTIFICATION.md`.
 
+**Full operator how-to (recommended):**
+[`docs/Capability_Certification_Howto.md`](Capability_Certification_Howto.md)
+— mental model, `.env.lab`, per-capability loop, evidence package, reviewer
+sign-off, one-capability promotion PR, worked example, and troubleshooting.
+
 ## Capabilities covered
 
 | Capability | Test file | Evidence template |

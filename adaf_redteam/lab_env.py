@@ -54,3 +54,31 @@ def lab_bind_password() -> str | None:
         return None
     value = os.environ.get("ADAF_RT_LAB_BIND_PASSWORD")
     return value if value else None
+
+
+def lab_target_principal() -> str | None:
+    """Optional principal under test (SID or DN) for rights-check capabilities.
+
+    Used by LAPS/gMSA certification when the engagement target is the object
+    (computer / gMSA DN) and the principal being evaluated is supplied separately.
+    """
+    if not lab_opt_in():
+        return None
+    value = os.environ.get("ADAF_RT_LAB_TARGET_PRINCIPAL", "").strip()
+    return value or None
+
+
+def lab_laps_computer_dn() -> str | None:
+    """Computer object DN whose LAPS ACL is read during certification."""
+    if not lab_opt_in():
+        return None
+    value = os.environ.get("ADAF_RT_LAB_LAPS_COMPUTER_DN", "").strip()
+    return value or None
+
+
+def lab_gmsa_dn() -> str | None:
+    """gMSA object DN whose msDS-GroupMSAMembership is read during certification."""
+    if not lab_opt_in():
+        return None
+    value = os.environ.get("ADAF_RT_LAB_GMSA_DN", "").strip()
+    return value or None

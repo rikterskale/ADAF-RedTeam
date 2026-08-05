@@ -1,11 +1,14 @@
 # Capability certification (`lab_certified: False → True`)
 
-Every capability in ADAF-RedTeam ships with `lab_certified=False`. Its live
-primitive (in `adaf_redteam/probes/*.py`) **raises** — the tool runs the
-orchestration offline via `--fixture` and stamps every real result *UNVALIDATED*.
-Certification is the deliberate, reviewed act of proving one capability's live
-primitive is correct, bounded, and reversible in a disposable lab, and then
-flipping its `lab_certified` flag to `True`.
+Every capability in ADAF-RedTeam ships with `lab_certified=False`. Some live
+collectors are implemented only for certification development; other adapters
+remain explicit `NotImplementedError` scaffolds. The CLI refuses an uncertified
+live attempt unless the operator explicitly sets `ADAF_RT_LAB=1`, and it stamps
+any such result *UNVALIDATED*. Certification is the deliberate, reviewed act of
+proving one capability's live primitive is correct, bounded, and reversible in a
+disposable lab, and then flipping its `lab_certified` flag to `True`. Every
+current descriptor remains uncertified, and none is supported for routine live
+use.
 
 This document is the gate. It defines what an operator must implement and prove
 before a capability may be trusted. It does not contain, and does not authorize,
@@ -40,7 +43,7 @@ get certified. It stays `False`.
 A capability may be promoted only when **all** of the following are true and
 evidenced:
 
-1. **Live primitive implemented** in its `probes/*.py` module, replacing the
+1. **Live primitive implemented and reviewed** in its `probes/*.py` module, replacing the
    `NotImplementedError` — bounded to exactly what the capability's `plan()`
    describes and nothing more (no extra targets, no extra operations).
 2. **Analyzer/orchestration unchanged in behavior.** The pure `analyze()` /

@@ -143,10 +143,13 @@ The remaining state-changing capabilities are now wired as gated scaffolds
   path.
 
 All capabilities described above are adapter-backed and currently uncertified.
-No capability ships a
-working live offensive primitive — each live path raises and is exercised offline
-via `--fixture`, `lab_certified=False` until a disposable-lab test certifies it.
-See [docs/CERTIFICATION.md](docs/CERTIFICATION.md) for the promotion gate.
+Some read-only collectors are implemented for certification development; an
+operator must explicitly set `ADAF_RT_LAB=1` before the CLI will attempt an
+uncertified live collector in a disposable lab. Other adapters remain scaffolds
+whose live primitive raises. Neither path is a supported live-use feature: all
+current descriptors have `lab_certified=False`. Use `--fixture` for the
+supported offline workflow and see [docs/CERTIFICATION.md](docs/CERTIFICATION.md)
+for the promotion gate.
 
 The current generated registry contains **27 capabilities**: **14 Executable**
 target-class capabilities and **13 LabExecutable** capabilities, with **0

@@ -346,6 +346,6 @@ deliberate, tested, reviewed step per capability.
 
 ---
 
-*Next step after your review: I can scaffold Phase 0 (skeleton + schemas +
-redaction test harness + ADAF ingest bridge) with no capability code, so you have
-something buildable to react to.*
+*Next step: use `docs/CERTIFICATION.md` to evaluate a specific capability for
+disposable-lab certification; do not infer live readiness from an adapter's
+presence in the registry.*

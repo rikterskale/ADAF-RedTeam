@@ -59,8 +59,8 @@ evidenced:
 5. **Idempotent, bounded, and interval-respecting.** The primitive honors
    `maximumActions` and `minimumIntervalMilliseconds`; a second run does not
    compound state.
-6. **Evidence package** (§7) is complete and attached to the certification ticket.
-7. **Independent review** (§8) sign-off recorded.
+6. **Evidence package** (§3) is complete and attached to the certification ticket.
+7. **Independent review** (§7) sign-off recorded.
 
 Only then: set `lab_certified=True` for that one capability in
 `adaf_redteam/capabilities/registry.py`, in the same PR as its certification test.
@@ -69,8 +69,13 @@ Only then: set `lab_certified=True` for that one capability in
 
 ## 2. Tier-specific requirements
 
-Capabilities fall into tiers by risk and reversibility. Each tier adds
-requirements on top of §1.
+Capabilities fall into tiers by risk and reversibility. The named entries below
+are the capabilities with tier-specific requirements currently documented here;
+they are not an exhaustive registry. Use
+[`CAPABILITY_REFERENCE.md`](CAPABILITY_REFERENCE.md) for the current registry.
+Before certifying an unlisted capability, the certification owner and independent
+reviewer must assign an appropriate tier and record its capability-specific
+requirements. Each tier adds requirements on top of §1.
 
 ### Tier A — read / metadata (Executable target)
 `dcsync-rights-validation`, `laps-read-authorization`, `gmsa-read-authorization`,
@@ -160,7 +165,7 @@ For each capability certified:
 5. For Tier B/C/E: a forced-failure run showing the cleanup latch engaging.
 6. For Tier D: the blue-team telemetry corroborating the detection block.
 7. The new/updated certification test (see §5) and a green CI run.
-8. Reviewer sign-off (§8).
+8. Reviewer sign-off (§7).
 
 ---
 
@@ -186,7 +191,7 @@ For each capability certified:
    never runs in normal CI, and asserts: correct verdict, clean redaction scan,
    verified restore (or honest durable residue), and latch-on-failure.
 3. Attach the evidence package (§3).
-4. Obtain review sign-off (§8).
+4. Obtain review sign-off (§7).
 5. In the **same PR**, set `lab_certified=True` for that one capability in
    `registry.py`. Never flip the flag in a PR that does not carry the evidence and
    the test.

@@ -7,6 +7,7 @@ proof is the authorization, not the secret.
 
 from __future__ import annotations
 
+from ...lab_env import lab_bind_password, lab_bind_user, lab_dc
 from ..base import Capability, CapabilityResult
 
 
@@ -54,4 +55,13 @@ class GmsaReadCapability(Capability):
 
     def _live_source(self):
         from ...directory.ldap_source import LdapDirectorySource
-        return LdapDirectorySource(self.domain, user=self.action.source_address)
+        bind_user = lab_bind_user() or self.action.source_address
+        server = lab_dc() or self.domain
+        password = lab_bind_password()
+        use_ccache = password is None
+        return LdapDirectorySource(
+            server,
+            user=bind_user,
+            use_kerberos_ccache=use_ccache,
+            password=password,
+        )

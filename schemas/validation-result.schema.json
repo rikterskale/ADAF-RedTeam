@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://example.invalid/adaf-redteam/validation-result.schema.json",
   "title": "ADAF-RedTeam validation result (the ADAF bridge)",
-  "description": "The ONLY artifact that crosses back into ADAF. Secret-free by construction.",
+  "description": "The artifact intended to cross back into ADAF. Schema validation constrains structure but cannot determine whether arbitrary string values are secret-free.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -68,7 +68,7 @@
         "assertions": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
         "redactedRefs": {
           "type": "object",
-          "description": "Handles, hashes, names, counts. Never secret values.",
+          "description": "Expected handles, hashes, names, or counts. Schema validation cannot determine whether arbitrary string values are secret-free.",
           "additionalProperties": {
             "description": "Hash, last-4, DN, count, right-name list, or opaque redacted handle.",
             "anyOf": [

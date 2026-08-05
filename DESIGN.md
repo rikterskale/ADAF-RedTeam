@@ -222,40 +222,44 @@ carries redacted evidence only when adapters follow the redaction discipline.
     "durableResidue": ["AD CS issuance/revocation record is durable"]  // honest about what can't be undone
   },
 
-  "integrity": { "resultSha256": "…", "signature": "…optional CMS…" }
+  "integrity": { "resultSha256": "…" }
 }
 ```
 
-**Rules the schema enforces (validated in CI):**
-- No property may contain a password, hash, ticket, token, PFX blob, private key,
-  LAPS value, or raw protocol blob. `redactedRefs` values are hashes, last-4s,
-  DNs, counts, or opaque handles only. A test asserts the redactor is the single
-  path that populates this object.
-- `stateChanging: true` ⇒ `containment.verified: true` and a
-  `authorization.riskAcceptanceReference` are required.
-- `verdict: "Confirmed"` with `stateChanging: true` ⇒ `cleanup` block required;
-  `durableResidue` must be present (may be an empty array only if truly none).
-- `readinessUsed: "Executable"` ⇒ `stateChanging` must be `false`.
+**Rules the schema and CI checks support:**
+- The schema constrains the document's structural shape and selected identifiers.
+  It accepts arbitrary strings in assertions and redacted references, so it cannot
+  prove those values are non-secret. Adapter redaction discipline, artifact tests,
+  certification evidence, and handoff review provide that assurance.
+- `stateChanging: true` requires a containment block with `verified: true` and a
+  cleanup block. The risk-acceptance reference is enforced by the runtime gate,
+  not by this result schema.
+- `durableResidue` is an optional cleanup field in the current schema. Durable
+  capabilities must document it through their adapter and certification evidence.
+- `readinessUsed: "Executable"` requires `stateChanging` to be `false`.
 
 **ADAF ingest side** (`bridge/adaf_ingest.py`, run from ADAF): reads a
 `validation-result.json`, validates it against the schema, confirms the
 `FindingId` exists in the target ADAF run, and writes a redacted
-`validation-linkage.json` next to `findings.csv`, flipping the finding's
-`Confidence` to `HIGH` and annotating `Status`. It imports nothing executable
-from RedTeam — only the JSON crosses.
+`validation-linkage.json` next to `findings.csv`. It does not modify the ADAF
+finding, its confidence, or its status; the linkage record has a
+`confidenceUpgrade` hint for the ADAF owner to review. It imports nothing
+executable from RedTeam — only the JSON crosses.
 
 ## 6. Redaction (the one rule that cannot leak)
 
 RedTeam *does* hold secrets in memory (that's the point). The discipline is that
 secrets never leave the process boundary:
 
-- A single `redaction/` module converts any secret into a **handle** the instant
-  it is obtained. Downstream code (evidence, bridge, logs) can only see handles.
+- The `redaction/` module converts secrets to **handles** when adapters use it.
+  Evidence, bridge, and logging code are intended to receive handles; this is an
+  adapter discipline rather than a type-level restriction on arbitrary strings.
 - Handle → value lives in one in-memory vault that is zeroized at run end and is
   never serialized. There is no "save loot" flag anywhere in the codebase.
-- CI has a **redaction test suite**: it runs each capability in a mocked-lab mode
-  and greps every produced artifact (journal, result, log, manifest) for
-  high-entropy strings and known secret shapes; a hit fails the build.
+- CI has a **redaction test suite** covering vault handles, zeroization, and the
+  evidence writers, with selected capability fixture tests. It does not perform
+  a universal high-entropy scan of every capability artifact; certification and
+  handoff review must supplement those unit tests.
 - Structured logs mirror ADAF: component, capability, target, technique,
   action count, timing — never secret material or full password-bearing command
   lines.

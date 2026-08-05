@@ -1,0 +1,73 @@
+{
+  "_comment": "Offline full-pipeline fixture for plan/execute without a live DC. Trustees and principals are synthetic.",
+  "domain_acl": [
+    {"trustee": "S-1-5-21-EXAMPLE-512", "right": "DS-Replication-Get-Changes", "effect": "Allow"},
+    {"trustee": "S-1-5-21-EXAMPLE-512", "right": "DS-Replication-Get-Changes-All", "effect": "Allow"},
+    {"trustee": "S-1-5-21-EXAMPLE-1104", "right": "DS-Replication-Get-Changes", "effect": "Allow"}
+  ],
+  "object_acl": [
+    {"trustee": "S-1-5-21-EXAMPLE-1104", "right": "ReadProperty", "object_type": "ms-Mcs-AdmPwd", "effect": "Allow"},
+    {"trustee": "S-1-5-21-EXAMPLE-1105", "right": "WriteProperty", "object_type": "msDS-KeyCredentialLink", "effect": "Allow"}
+  ],
+  "gmsa_readers": ["S-1-5-21-EXAMPLE-1104", "S-1-5-21-EXAMPLE-3003"],
+
+  "asrep": {
+    "svc-asrep01": {"preauth_required": false, "etype": 23},
+    "normaluser": {"preauth_required": true}
+  },
+  "tgs": {
+    "MSSQLSvc/db01.corp.contoso.test": {"obtained": true, "etype": 23},
+    "http/missing.corp.contoso.test": {"obtained": false}
+  },
+  "zerologon": {"accepted_zero_auth": true, "attempts_used": 37},
+
+  "rbcd": {
+    "WIN-LAB01$": {"current": null, "s4u_ok": true}
+  },
+  "shadowcred": {
+    "CN=svc-web,CN=Users,DC=corp,DC=contoso,DC=test": {
+      "links": [],
+      "pkinit_ok": true
+    }
+  },
+
+  "group_members": {
+    "CN=Domain Admins,CN=Users,DC=corp,DC=contoso,DC=test": [
+      {"dn": "CN=Administrator,CN=Users,DC=corp,DC=contoso,DC=test", "class": "user"},
+      {"dn": "CN=Tier0-Admins,CN=Users,DC=corp,DC=contoso,DC=test", "class": "group"}
+    ]
+  },
+  "trusts": {
+    "corp.contoso.test": [
+      {
+        "trustPartner": "partner.example.test",
+        "trustDirection": 3,
+        "trustType": 2,
+        "trustAttributes": 0
+      }
+    ]
+  },
+  "sidhistory": {
+    "corp.contoso.test": [
+      {"dn": "CN=migrated-user,CN=Users,DC=corp,DC=contoso,DC=test", "sidHistory": ["S-1-5-21-OLDDOMAIN-1001"]}
+    ]
+  },
+  "machine_account_quota": {
+    "corp.contoso.test": 10
+  },
+
+  "delegation": {
+    "CN=svc-deleg,CN=Users,DC=corp,DC=contoso,DC=test": {
+      "unconstrained": false,
+      "protocol_transition": true,
+      "allowed_to_delegate_to": ["http/app.corp.contoso.test"]
+    }
+  },
+  "s4u": {
+    "svc-deleg": {
+      "s4u2self_ok": true,
+      "s4u2proxy_ok": true,
+      "authenticated": true
+    }
+  }
+}

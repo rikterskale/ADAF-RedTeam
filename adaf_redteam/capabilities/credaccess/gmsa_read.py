@@ -7,7 +7,13 @@ proof is the authorization, not the secret.
 
 from __future__ import annotations
 
-from ...lab_env import lab_bind_password, lab_bind_user, lab_dc
+from ...lab_env import (
+    lab_bind_password,
+    lab_bind_user,
+    lab_dc,
+    lab_gmsa_dn,
+    lab_target_principal,
+)
 from ..base import Capability, CapabilityResult
 
 
@@ -32,26 +38,27 @@ def analyze(target: str, gmsa_dn: str, readers: list[str]) -> CapabilityResult:
 
 class GmsaReadCapability(Capability):
     def plan(self) -> dict:
+        principal, gmsa_dn = self._principal_and_gmsa()
         return {
             "capabilityId": "gmsa-read-authorization",
             "reads": "msDS-GroupMSAMembership of the target gMSA",
             "does_not": ["retrieve msDS-ManagedPassword", "any write"],
             "target": self.action.target,
+            "principal": principal,
+            "gmsa": gmsa_dn,
             "domain": self.domain,
         }
 
     def execute(self) -> CapabilityResult:
         source = self.source or self._live_source()
-        # self.action.target is the principal; the gMSA DN is supplied as domain-scoped.
-        readers = source.gmsa_readers(self._gmsa_dn())
-        return analyze(self.action.target, self._gmsa_dn(), readers)
+        principal, gmsa_dn = self._principal_and_gmsa()
+        readers = source.gmsa_readers(gmsa_dn)
+        return analyze(principal, gmsa_dn, readers)
 
-    def _gmsa_dn(self) -> str:
-        # In this phase the engagement lists the gMSA DN as the capability target's
-        # companion; for the exposure check we treat action.target as the principal
-        # and expect the collector to resolve the gMSA under test. Kept explicit so
-        # the live path is obvious at certification time.
-        return getattr(self, "_gmsa_under_test", self.action.target)
+    def _principal_and_gmsa(self) -> tuple[str, str]:
+        principal = lab_target_principal() or self.action.target
+        gmsa_dn = lab_gmsa_dn() or getattr(self, "_gmsa_under_test", self.action.target)
+        return principal, gmsa_dn
 
     def _live_source(self):
         from ...directory.ldap_source import LdapDirectorySource

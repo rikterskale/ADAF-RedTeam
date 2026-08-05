@@ -100,7 +100,9 @@ jobs:
       - name: Install development dependencies
         run: python -m pip install -e ".[dev]"
       - name: Audit installed dependencies
-        run: pip-audit --strict --skip-editable
+        run: |
+          python -m pip freeze --exclude-editable > "$RUNNER_TEMP/requirements-audit.txt"
+          pip-audit --strict --requirement "$RUNNER_TEMP/requirements-audit.txt"
       - name: Check tracked content for known test secrets
         run: |
           if git grep -n "S3cr3t-Passw0rd-aabbccddeeff00112233" -- '*.json' '*.jsonl'; then

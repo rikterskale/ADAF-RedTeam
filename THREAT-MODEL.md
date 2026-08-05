@@ -2,8 +2,8 @@
 
 ## What this tool is
 An execution tool for **authorized** Active Directory red-team / purple-team /
-adversary-emulation work. It handles secrets in memory (that is the point) but
-guarantees they never leave the process. It exists to prove findings and to test
+adversary-emulation work. It handles secrets in memory (that is the point) and
+is designed to prevent their serialization. It exists to prove findings and to test
 whether defenses detect real techniques.
 
 ## Assets it touches
@@ -12,10 +12,11 @@ whether defenses detect real techniques.
 - Engagement authorization data (domains, targets, source addresses, approvals).
 
 ## Non-negotiable guarantees
-1. **No secret leaves the process.** All secret material is converted to a handle
-   the instant it is obtained (`adaf_redteam/redaction`). No serialization path,
-   log, journal, result, or manifest can contain it. Enforced by the redaction
-   test suite in CI.
+1. **Secret-handling discipline.** Capability adapters are expected to convert
+   secret material to a handle at acquisition (`adaf_redteam/redaction`), and CI
+   redaction tests inspect produced artifacts for known secret shapes. The result
+   schema permits arbitrary strings, so it cannot by itself prove an adapter did
+   not serialize a secret; code review and certification evidence remain required.
 2. **No action without authorization.** Every capability requires a schema-valid
    engagement file, an exact target inside the authorized set, a source address
    inside the authorized set, and the required ATT&CK technique. State-changing
@@ -38,8 +39,10 @@ whether defenses detect real techniques.
 - Running outside scope: source-address and target gates refuse.
 - Silent production compromise via evasion tooling: the detection-evidence
   requirement and technique allowlist make "silent" a non-mode.
-- Result tampering feeding false confidence into ADAF: results are SHA-256
-  hashed and optionally CMS-signed; ADAF ingest re-validates.
+- Result tampering feeding false confidence into ADAF: the producer records a
+  SHA-256 body hash, and ingest re-validates the schema and forbidden key names.
+  Ingest currently does not recompute the hash or verify a signature, so the
+  operator must retain and review the approved result under the evidence policy.
 
 ## Residual risks (honest)
 - AD CS issuance/revocation and some directory writes leave durable records;

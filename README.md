@@ -199,5 +199,7 @@ python bridge/adaf_ingest.py --result ./out/validation-result.json \
   --adaf-run /path/to/ADAF-Run
 ```
 
-Only the redacted `validation-result.json` crosses the boundary. No secret,
-hash, ticket, PFX, or key is ever written by this tool.
+Only the redacted `validation-result.json` is intended to cross the boundary.
+Supported adapters use the redaction vault and CI artifact checks, but the result
+schema accepts arbitrary strings; review a result before handoff. Treat any
+serialized secret, hash, ticket, PFX, or key as a security-critical defect.

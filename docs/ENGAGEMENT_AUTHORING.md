@@ -52,8 +52,8 @@ Every capability entry requires these fields.
 | `approved` | Yes | Must be `true`; otherwise `ADAF-RT-E101` is returned. |
 | `targets` | Yes | Exact targets. The requested target must be present exactly. |
 | `attackTechnique` | Yes | Must equal the capability's reference technique. |
-| `maximumActions` | Yes | Positive approved budget, recorded in output. |
-| `minimumIntervalMilliseconds` | No | Non-negative pacing value; set it explicitly when the ROE requires pacing. |
+| `maximumActions` | Yes | Positive approved budget, recorded in output. The current CLI does not independently enforce repeated adapter operations; certification evidence must demonstrate a capability honors its bound. |
+| `minimumIntervalMilliseconds` | No | Non-negative pacing value, recorded in output. The current CLI does not enforce pacing; certification evidence must demonstrate any capability-specific interval behavior. |
 | `timeoutMilliseconds` | No | Positive timeout statement for the engagement. Retain it as ROE control even where an adapter does not yet consume it. |
 | `productionAuthorized` | No | Applies only to non-state-changing capability classes. |
 

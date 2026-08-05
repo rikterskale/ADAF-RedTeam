@@ -165,9 +165,9 @@ Optional heavy offensive deps (impacket, certipy-equivalents) live behind
 ## 5. The bridge contract (`validation-result.schema.json`)
 
 This is the load-bearing artifact. It is the *only* thing that crosses back into
-ADAF, and it is **secret-free by construction**. It correlates to an ADAF finding
-by `FindingId`/`ControlId`, states a verdict and a *class* of proof, and carries
-redacted evidence only.
+ADAF, and it is designed for secret-free evidence. It correlates to an ADAF
+finding by `FindingId`/`ControlId`, states a verdict and a *class* of proof, and
+carries redacted evidence only when adapters follow the redaction discipline.
 
 ```jsonc
 {
@@ -298,7 +298,9 @@ None of this is a substitute for operator judgment; it is a floor, not a ceiling
    redacted refs only). The CLI computes an integrity hash; a signature is
    optional in the schema and is not produced by the CLI.
 6. `python bridge/adaf_ingest.py --result validation-result.json --adaf-run C:\ADAF-Run`
-   → ADAF finding annotated, Confidence→HIGH, linkage recorded. No secret crossed.
+   → ADAF finding annotated, Confidence→HIGH, linkage recorded. Review the
+   redacted result before handoff; the ingest helper does not independently prove
+   that arbitrary string values are non-secret.
 
 ## 9. Phased build plan
 

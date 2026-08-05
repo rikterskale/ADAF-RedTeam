@@ -56,9 +56,11 @@ evidenced:
 4. **Authorization gate honored.** Live attempts outside the authorized
    source/target/technique are refused. Re-run the gate tests against the live
    build.
-5. **Idempotent, bounded, and interval-respecting.** The primitive honors
-   `maximumActions` and `minimumIntervalMilliseconds`; a second run does not
-   compound state.
+5. **Idempotent, bounded, and interval-respecting.** The certification evidence
+   demonstrates that the primitive honors `maximumActions` and
+   `minimumIntervalMilliseconds`, and that a second run does not compound state.
+   The current CLI records these engagement values but does not independently
+   enforce repeated operations or pacing.
 6. **Evidence package** (§3) is complete and attached to the certification ticket.
 7. **Independent review** (§7) sign-off recorded.
 

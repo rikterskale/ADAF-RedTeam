@@ -28,8 +28,8 @@ Keep real engagement files outside the repository: `.gitignore` excludes
 | `schemaVersion` | Yes | Exactly `"1.0"`. |
 | `engagementId` | Yes | A stable ID matching `ENG-` followed by uppercase letters, digits, or hyphens. |
 | `customer` | No | A non-secret customer or lab label. |
-| `authorizedDomains` | Yes | One or more domains covered by the written ROE. The CLI uses the first unless `--domain` is supplied. |
-| `authorizedSourceAddresses` | Yes | Exact approved operator-host source addresses. `--source-address` must match one exactly. |
+| `authorizedDomains` | Yes | One or more domains covered by the written ROE. The CLI uses the first unless `--domain` is supplied; a supplied value is not independently checked against this list. |
+| `authorizedSourceAddresses` | Yes | Exact approved operator-host source addresses. The supplied `--source-address` must match one exactly, but the CLI does not independently establish the host's actual address. |
 | `windowStartUtc`, `windowEndUtc` | Yes | UTC RFC 3339 timestamps. Confirm the timezone conversion with the engagement owner. |
 | `operatorContacts` | Yes | Responsible contacts suitable for the result record. |
 | `stopConditions` | Yes | Concrete stop triggers, such as customer direction or observed production impact. |

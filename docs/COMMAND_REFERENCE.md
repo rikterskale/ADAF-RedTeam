@@ -94,7 +94,7 @@ Three arguments are required in every mode:
 |---|---:|---|
 | `--engagement FILE` | Yes | Path to the schema-valid engagement JSON. It must contain authorization for the exact capability. |
 | `--capability ID` | Yes | Exact ID from `list-capabilities` or the capability reference. |
-| `--source-address ADDRESS` | Yes | The operator host's exact authorized source address. |
+| `--source-address ADDRESS` | Yes | Supplied source-address value. It must exactly match the engagement list, but the CLI does not independently establish the host's actual address. |
 
 The remaining options are:
 
@@ -102,7 +102,7 @@ The remaining options are:
 |---|---|---|
 | `--target TARGET` | First authorized target for the capability | Exact target. If omitted, the first target in the matching engagement entry is used. It must still be authorized exactly. |
 | `--plan-only` | Off | Writes a no-network plan and does not run an adapter's `execute()` method. This is the required first execution mode. |
-| `--domain DOMAIN` | First `authorizedDomains` entry | Domain recorded in the plan or result and supplied to the adapter. |
+| `--domain DOMAIN` | First `authorizedDomains` entry | Domain recorded in the plan or result and supplied to the adapter. A supplied value is not checked against `authorizedDomains`; use only the exact ROE-authorized domain. |
 | `--finding-id FINDING_ID` | None | ADAF correlation ID. Required for non-plan execution; must match `F-` followed by 16 uppercase hexadecimal characters for a result to validate. |
 | `--control-id CONTROL_ID` | None | ADAF correlation ID. Required for non-plan execution; must match the result schema's `ADAF-` identifier pattern. |
 | `--fixture FILE` | None | Offline directory/ACE fixture JSON. It bypasses the live collector but does not bypass authorization, containment, cleanup, or output safeguards. |

@@ -2,7 +2,7 @@
 
 > **Status:** IN PROGRESS — the live primitive is implemented and offline-tested;
 > the flag `lab_certified` remains `False` in `registry.py` until this file is
-> complete and reviewer sign-off (§8) is recorded.
+> complete and reviewer sign-off (this file §6; `CERTIFICATION.md` §7) is recorded.
 
 Follow [docs/CERTIFICATION.md](../CERTIFICATION.md). This file is the evidence
 package (§3). The owner fills it in from a disposable-lab run; a second person
@@ -97,13 +97,15 @@ grep -Eri 'password|krbtgt|nthash|ntlm|aes256-cts|aes128-cts|-----BEGIN|hash:|ti
 
 - Ran with wrong source address → gate refused (rc=3): `__________`
 - Ran with wrong technique → gate refused (rc=3): `__________`
-- Ran outside window → gate refused (rc=3): `__________`
+- The current gate does not enforce the engagement window; record the independent
+  ROE/window review and reviewer attestation: `__________`
 
 ### 4.3 Idempotency / bounds
 
 - Same run twice → identical `redactedRefs`, no state accumulated on the DC:
   `__________`
-- `maximumActions=1` honored (second search refused): `__________`
+- `maximumActions=1` and pacing behavior evidenced by the certified primitive:
+  `__________` (the current CLI records these values but does not enforce them)
 
 ---
 

@@ -2,7 +2,7 @@
 
 > **Status:** IN PROGRESS — the live primitive is implemented and offline-tested;
 > the flag `lab_certified` remains `False` in `registry.py` until this file is
-> complete and reviewer sign-off (§6) is recorded.
+> complete and reviewer sign-off (this file §6; `CERTIFICATION.md` §7) is recorded.
 
 Follow [docs/CERTIFICATION.md](../CERTIFICATION.md). This file is the evidence
 package (§3). The owner fills it in from a disposable-lab run; a second person
@@ -138,7 +138,8 @@ grep -Eri 'crackable|\$krb5tgs\$|ticket-bytes|-----BEGIN|cipher:|password|krbtgt
 
 - Ran with wrong source address → gate refused (rc=3): `__________`
 - Ran with wrong technique → gate refused (rc=3): `__________`
-- Ran outside window → gate refused (rc=3): `__________`
+- The current gate does not enforce the engagement window; record the independent
+  ROE/window review and reviewer attestation: `__________`
 - Ran without `--fixture` and `ADAF_RT_LAB` unset → gate refused (rc=4)
   with NOT CERTIFIED message: `__________`
 
@@ -147,8 +148,8 @@ grep -Eri 'crackable|\$krb5tgs\$|ticket-bytes|-----BEGIN|cipher:|password|krbtgt
 - Same run twice against the registered SPN → identical `redactedRefs`;
   ccache is unchanged (only reads a TGT); KDC event log shows two 4769s
   and nothing else: `__________`
-- `maximumActions=1` honored (second TGS-REQ within one capability call
-  refused): `__________`
+- `maximumActions=1` and pacing behavior evidenced by the certified primitive:
+  `__________` (the current CLI records these values but does not enforce them)
 - No retries on transient KerberosError (bounded to one TGS-REQ per plan):
   `__________`
 

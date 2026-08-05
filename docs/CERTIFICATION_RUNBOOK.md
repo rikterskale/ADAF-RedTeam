@@ -6,7 +6,7 @@ capabilities. It does **not** authorize production use and does **not** flip
 independent reviewer sign-off in `docs/CERTIFICATION.md`.
 
 **Full operator how-to (recommended):**
-[`docs/Capability_Certification_Howto.md`](Capability_Certification_Howto.md)
+[`docs/ADAF-RedTeam_Capability_Certification_Howto.md`](ADAF-RedTeam_Capability_Certification_Howto.md)
 — mental model, `.env.lab`, per-capability loop, evidence package, reviewer
 sign-off, one-capability promotion PR, worked example, and troubleshooting.
 

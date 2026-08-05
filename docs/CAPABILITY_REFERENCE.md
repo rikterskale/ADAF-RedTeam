@@ -6,33 +6,33 @@ This reference is generated from `adaf_redteam/capabilities/registry.py`. `Execu
 
 | Capability | Group | Target class | State changing | Required ATT&CK | Availability |
 |---|---|---|---|---|---|
-| `acl-write-rights-inventory` | discovery | Executable | No | `T1098` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `adcs-esc1-validation` | adcs | LabExecutable | Yes | `T1649` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `adcs-esc6-editf-check` | adcs | Executable | No | `T1649` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `adcs-esc7-manage-rights` | adcs | Executable | No | `T1649` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `adcs-esc8-relay-web-enrollment` | adcs | LabExecutable | Yes | `T1649` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `adversary-emulation-evasion` | detection | LabExecutable | Yes | `T1562` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `asrep-roast-validation` | kerberos | Executable | No | `T1558.004` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `coercion-petitpotam` | coercion-relay | LabExecutable | Yes | `T1187` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `dcsync-rights-validation` | credential-access | Executable | No | `T1003.006` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `delegation-rights-validation` | kerberos | Executable | No | `T1558` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `delegation-s4u2proxy-proof` | kerberos | LabExecutable | No | `T1558` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `exec-proof-svcctl` | lateral | LabExecutable | Yes | `T1569.002` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `gmsa-read-authorization` | credential-access | Executable | No | `T1552` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `golden-silver-ticket` | kerberos | LabExecutable | Yes | `T1558.001` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `kerberoast-validation` | kerberos | Executable | No | `T1558.003` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `laps-read-authorization` | credential-access | Executable | No | `T1552` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `machine-account-quota-check` | discovery | Executable | No | `T1136.002` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `ntds-dpapi-read-proof` | credential-access | LabExecutable | No | `T1003.003` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `payload-reliability-labtest` | detection | LabExecutable | Yes | `T1550` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `privileged-group-inventory` | discovery | Executable | No | `T1069.002` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `rbcd-write-validation` | kerberos | LabExecutable | Yes | `T1558` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `shadow-credential-write` | kerberos | LabExecutable | Yes | `T1556` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `sidhistory-inventory` | discovery | Executable | No | `T1134.005` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `smb-ldap-relay-shadowcred` | coercion-relay | LabExecutable | Yes | `T1557.001` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `trust-inventory` | discovery | Executable | No | `T1482` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `zerologon-detection` | detection | Executable | No | `T1210` | Uncertified: fixture/orchestration only; live use is unavailable |
-| `zerologon-reset` | netlogon | LabExecutable | Yes | `T1210` | Uncertified: fixture/orchestration only; live use is unavailable |
+| `acl-write-rights-inventory` | discovery | Executable | No | `T1098` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `adcs-esc1-validation` | adcs | LabExecutable | Yes | `T1649` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `adcs-esc6-editf-check` | adcs | Executable | No | `T1649` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `adcs-esc7-manage-rights` | adcs | Executable | No | `T1649` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `adcs-esc8-relay-web-enrollment` | adcs | LabExecutable | Yes | `T1649` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `adversary-emulation-evasion` | detection | LabExecutable | Yes | `T1562` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `asrep-roast-validation` | kerberos | Executable | No | `T1558.004` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `coercion-petitpotam` | coercion-relay | LabExecutable | Yes | `T1187` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `dcsync-rights-validation` | credential-access | Executable | No | `T1003.006` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `delegation-rights-validation` | kerberos | Executable | No | `T1558` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `delegation-s4u2proxy-proof` | kerberos | LabExecutable | No | `T1558` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `exec-proof-svcctl` | lateral | LabExecutable | Yes | `T1569.002` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `gmsa-read-authorization` | credential-access | Executable | No | `T1552` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `golden-silver-ticket` | kerberos | LabExecutable | Yes | `T1558.001` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `kerberoast-validation` | kerberos | Executable | No | `T1558.003` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `laps-read-authorization` | credential-access | Executable | No | `T1552` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `machine-account-quota-check` | discovery | Executable | No | `T1136.002` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `ntds-dpapi-read-proof` | credential-access | LabExecutable | No | `T1003.003` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `payload-reliability-labtest` | detection | LabExecutable | Yes | `T1550` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `privileged-group-inventory` | discovery | Executable | No | `T1069.002` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `rbcd-write-validation` | kerberos | LabExecutable | Yes | `T1558` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `shadow-credential-write` | kerberos | LabExecutable | Yes | `T1556` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `sidhistory-inventory` | discovery | Executable | No | `T1134.005` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `smb-ldap-relay-shadowcred` | coercion-relay | LabExecutable | Yes | `T1557.001` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `trust-inventory` | discovery | Executable | No | `T1482` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `zerologon-detection` | detection | Executable | No | `T1210` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
+| `zerologon-reset` | netlogon | LabExecutable | Yes | `T1210` | Uncertified: fixtures supported; certification development requires ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable |
 
 ## Stable operator error codes
 

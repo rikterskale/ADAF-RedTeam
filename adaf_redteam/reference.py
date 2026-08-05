@@ -8,7 +8,8 @@ from .capabilities.registry import list_descriptors
 def availability(descriptor) -> str:
     if descriptor.lab_certified:
         return "Lab-certified live primitive"
-    return "Uncertified: fixture/orchestration only; live use is unavailable"
+    return ("Uncertified: fixtures supported; certification development requires "
+            "ADAF_RT_LAB=1 in a disposable lab; routine live use is unavailable")
 
 
 def render_capability_reference() -> str:

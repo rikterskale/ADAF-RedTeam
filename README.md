@@ -1,19 +1,20 @@
 # ADAF-RedTeam
 
 **Authorization-first offensive validation for Active Directory. Not an audit
-tool. Not for beginners.**
+tool. The safe local guides cover setup and plan-only workflows; they do not
+authorize or qualify an operator for live validation.**
 
 ADAF-RedTeam proves exploitability of findings surfaced by
 [ADAF](https://github.com/rikterskale/Active-Directory-Assessment-Framework) and
 returns a **redacted, secret-free result** that ADAF can ingest. ADAF finds and
 prioritizes; ADAF-RedTeam validates; only a redacted verdict crosses back.
 
-> Run this only under a written, scoped engagement. Every capability is disabled
-> by default and refuses to execute without a schema-valid engagement file that
+> Run this only under a written, scoped engagement. Non-plan execution refuses
+> to proceed without a schema-valid engagement file that
 > names the domain, exact targets, source addresses, time window, stop
 > conditions, allowed ATT&CK techniques, and (for anything that changes state)
-> risk acceptance and lab containment. There is no "quick start" and no
-> credential/loot export path anywhere in this codebase.
+> risk acceptance and lab containment. The documented safe first run is
+> plan-only; there is no credential/loot export path anywhere in this codebase.
 
 See [DESIGN.md](DESIGN.md) for the full architecture,
 [THREAT-MODEL.md](THREAT-MODEL.md) for the operator threat model, and

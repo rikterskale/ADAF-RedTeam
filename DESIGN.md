@@ -1,9 +1,11 @@
 # ADAF-RedTeam — Architecture & Design Spec (v0.1 draft)
 
-> Status: design draft for review. No exploit code exists yet. This document
-> defines scope, the trust boundary, the ADAF bridge contract, the repo layout,
-> and a phased build plan. Nothing here authorizes offensive action; every
-> capability is gated behind a signed engagement file at runtime.
+> Status: implemented architecture with an evolving capability registry. The
+> repository contains adapter-backed, offline-testable capability workflows, but
+> every current live primitive is `lab_certified=False`. This document defines
+> the scope, trust boundary, ADAF bridge contract, and implementation layout.
+> Nothing here authorizes offensive action; non-plan execution is gated by a
+> schema-valid engagement file at runtime.
 
 ## 1. Why this is a separate project
 
@@ -42,7 +44,11 @@ ADAF can mark a finding `Confirmed` without ever touching the proof material.
 
 ## 2. Scope
 
-### In scope (the offensive surface you listed)
+### Historical intended scope (not the current feature list)
+
+The following paragraph is retained as design history. It is not a claim that
+every named technique is implemented or supported. For current capabilities,
+consult the generated capability reference.
 Credential access (DCSync, gMSA/LAPS read, offline secretsdump, PtH/OtH),
 Kerberos (AS-REP/Kerberoast, RBCD S4U, Shadow Credentials + PKINIT, golden/silver,
 PtT), lateral/execution (SVCCTL, WinRM, WMI/DCOM, TSCH), ADCS + coercion/relay
@@ -52,8 +58,10 @@ PtT), lateral/execution (SVCCTL, WinRM, WMI/DCOM, TSCH), ADCS + coercion/relay
 - **No mass targeting.** Every action names an exact principal/host. No wildcards,
   no "all vulnerable objects," no subtree sweeps, no auto-propagation.
 - **No persistence or C2.** This proves access; it does not maintain it.
-- **No "novice" on-ramp.** No beginner guide, no "safe first run" framing. The
-  README's first section is authorization, not quick-start.
+- **No live-use on-ramp.** The Windows, Linux, and Docker guides support only
+  local setup, plan-only review, and approved offline fixtures. They do not
+  authorize live validation or replace operator experience, a written ROE, or
+  certification.
 - **No secrets in any output.** Same rule as ADAF, applied to a tool that
   actually handles secrets in memory (see §6).
 - **No silent-compromise mode.** Evasion is supported (see §2a) but only in a
@@ -90,16 +98,20 @@ targets outside the engagement.
 
 ## 3. Trust boundary & authorization model
 
-Reuse ADAF's engagement-file model verbatim so operators learn one format. A
+The engagement-file model is compatible in purpose with ADAF's model, but this
+repository's authoritative structure is `schemas/engagement.schema.json`. A
 capability may run only when **all** of the following hold:
 
 1. A schema-valid engagement file names the `engagementId`, `authorizedDomains`,
    `authorizedSourceAddresses`, time window, `stopConditions`, and `operatorContacts`.
-2. The specific capability id is listed under `activeValidation.selected` with a
-   per-capability `authorizations` block: exact `targets`, `maximumActions`,
-   `minimumIntervalMilliseconds`, and the required ATT&CK technique.
-3. The run's real source address is inside `authorizedSourceAddresses`.
-4. The target is inside `authorizedDomains` **and** the capability's `targets`.
+2. The specific capability ID is listed under `capabilities` with exact
+   `targets`, `maximumActions`, and the required ATT&CK technique.
+3. The supplied `--source-address` exactly matches an entry in
+   `authorizedSourceAddresses`; the CLI does not independently determine the
+   host's address.
+4. The target exactly matches the capability's `targets` entry. The selected
+   domain is recorded from `authorizedDomains` (or `--domain`); the gate does
+   not derive target-domain membership.
 5. For anything state-changing: `stateChangingApproved: true`, `riskAccepted: true`
    with a `riskAcceptanceReference`, `cleanupRequired: true`, **and** a positive
    lab-containment probe (see §7).
@@ -251,13 +263,20 @@ This is what lets an offensive tool honestly claim ADAF's evidence guarantee.
 
 ## 7. Lab containment guard
 
+Implementation note: the containment probe currently validates the engagement's
+`labContainmentRequired` control and the declared `labAddressRanges` /
+`labResolvedAddresses` relationship. It fails closed when an address is missing
+or lies outside the declared CIDRs. Its outcome is placed in a redacted result;
+it does not write a separate `containment-probe.json` artifact or perform live
+DNS, install-date, or object-count checks.
+
 State-changing capabilities (golden/silver, RBCD/shadow-cred writes, ESC1
 issuance, relay-writes) require a **positive containment probe** before the first
-mutating action, recorded as `containment-probe.json`:
+mutating action:
 
-- Confirms the target domain is flagged `disposable-lab` in the engagement file.
-- Refuses to proceed if the target resolves to an address outside a lab range,
-  or if the DC's install date / object count suggests production.
+- Requires the engagement's `labContainmentRequired` control and a consistent
+  declaration of lab CIDRs and addresses.
+- Refuses when that declaration cannot demonstrate containment.
 - Cleanup failure **latches**: once a cleanup verify fails, the guard blocks all
   further state-changing actions in the run. State-changing steps are never
   resumed from a checkpoint.
@@ -271,14 +290,25 @@ None of this is a substitute for operator judgment; it is a floor, not a ceiling
    sets exact `targets`, `stateChangingApproved`, `riskAccepted`, technique `T1649`.
 3. `adaf-redteam run --engagement eng.json --capability adcs-esc1-validation
    --plan-only` → emits the plan; operator reviews.
-4. Drop `--plan-only`; containment probe passes; capability executes one bounded
-   enrollment in the lab; secret is handled and discarded; cleanup runs & verifies.
-5. RedTeam writes signed `validation-result.json` (verdict `Confirmed`,
-   proofClass, redacted refs only).
+4. After the exact capability has completed the certification process, an
+   operator may drop `--plan-only` only in the approved lab; containment passes,
+   the bounded workflow executes, secret material is handled and discarded, and
+   cleanup runs and verifies.
+5. RedTeam writes `validation-result.json` (verdict `Confirmed`, proofClass,
+   redacted refs only). The CLI computes an integrity hash; a signature is
+   optional in the schema and is not produced by the CLI.
 6. `python bridge/adaf_ingest.py --result validation-result.json --adaf-run C:\ADAF-Run`
    → ADAF finding annotated, Confidence→HIGH, linkage recorded. No secret crossed.
 
 ## 9. Phased build plan
+
+Current status (authoritative): the Phase 0–2 safety controls and the current
+adapter registry are implemented. All 27 descriptors are adapter-backed and
+currently have `lab_certified=False`; supported operation is plan-only or an
+engagement-approved offline fixture. The historical plan below is retained for
+design context only and does not describe current live availability. The
+generated `docs/CAPABILITY_REFERENCE.md` and `docs/CERTIFICATION.md` govern
+registry status and certification promotion.
 
 - **Phase 0 — skeleton (no capabilities).** Repo, CLI, engagement parser, authz
   gate, redaction choke point + its test suite, both schemas, `adaf_ingest.py`,

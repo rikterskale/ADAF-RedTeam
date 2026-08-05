@@ -65,9 +65,102 @@ Certification happens **only** in a disposable lab you can rebuild from scratch.
 
 ---
 
+## 2.1 Choose your computer and terminal
+
+This how-to's supported novice path is **Windows Terminal using PowerShell**.
+Open Windows Terminal, select **PowerShell**, then enter the ADAF-RedTeam
+repository folder before running any command below. Do not paste PowerShell
+commands into Command Prompt, Git Bash, or a Linux terminal.
+
+If you use Linux, stop here and give this guide to the lab administrator. Linux
+uses different commands, file paths, and Kerberos setup; do not translate a
+command by guessing. The Linux novice guide is
+[`LINUX_NOVICE_USABILITY_GUIDE.md`](guides/LINUX_NOVICE_USABILITY_GUIDE.md).
+
+### Command CERT-WIN-001 — verify Python
+
+**Purpose:** Check that the approved Python launcher is available. This command
+does not contact a network target. **Run in:** PowerShell, any folder.
+
+```powershell
+py -3 --version
+```
+
+**Expected success:** `Python 3.10.x` or newer. If it says `py is not
+recognized`, or reports a version below 3.10: **STOP.** Ask the approved
+software administrator to install Python. Do not download an installer or
+change security settings yourself.
+
+### Command CERT-WIN-002 — enter the project folder
+
+Replace the path only with the location supplied by the project administrator.
+
+```powershell
+Set-Location 'C:\Users\YOUR-NAME\Documents\GitHub\ADAF-RedTeam'
+```
+
+**Expected success:** no message; the prompt ends in `ADAF-RedTeam>`. If it
+fails, stop and ask the administrator for the approved project folder path.
+
+### Command CERT-WIN-002A — install the approved local tools
+
+Run this only after the project administrator confirms that this is the approved
+repository copy. It creates a project-local Python environment, then installs
+the certification dependencies into that environment.
+
+```powershell
+py -3 -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -e ".[ldap,kerberos,dev]"
+```
+
+**Expected success:** the final install line ends with `Successfully installed`
+or `Successfully built`, and the exit code is 0. **If it fails:** do not disable
+certificate validation, change PowerShell execution policy, or use an
+unapproved package source. Give the complete error to the project administrator.
+
+---
+
+## 2.2 Local preflight (required before every live test)
+
+The preflight checks the local folder, Python launcher, policy file, whether the
+local settings file contains the required *names*, and whether Git ignores that
+settings file. It does not print settings values, authenticate, contact a DC, or
+authorize a test.
+
+Create `.env.lab.ps1` only from values provided by the named lab administrator.
+It stays on the operator computer and is ignored by Git. Do not put a password
+in it unless the administrator explicitly approves that method.
+
+```powershell
+# .env.lab.ps1 — example structure only; use administrator-approved lab values.
+$env:ADAF_RT_LAB = '1'
+$env:ADAF_RT_LAB_DOMAIN = 'corp.contoso.test'
+$env:ADAF_RT_LAB_DC = '10.10.0.10'
+$env:ADAF_RT_LAB_SOURCE_ADDR = '10.10.0.50'
+$env:ADAF_RT_LAB_BIND_USER = 'CORP\certuser'
+```
+
+### Command CERT-WIN-003 — run the preflight
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\certification_preflight.py --capability asrep-roast-validation
+```
+
+**Expected success:** every line starts with `PASS`, followed by `PASS: Local
+preflight complete. This does not authorize or start a live test.` If any line
+starts with `FAIL`: **STOP.** Do not run pytest or a live capability. Copy the
+complete screen output into the certification ticket and ask the lab
+administrator to fix the named item. Never edit the preflight script to make a
+failure disappear. Replace `asrep-roast-validation` only with the one capability
+being prepared.
+
+---
+
 ## 3. Lab inventory and `.env.lab`
 
-Create a local, **untracked** file (never commit secrets, tickets, or validation results):
+The Bash file below is retained as a reference for trained Linux administrators.
+Windows operators must use `.env.lab.ps1` from section 2.2, not this file. Both
+files are local-only and must never be committed.
 
 ```bash
 # .env.lab — example only; replace every value
@@ -147,6 +240,11 @@ klist
 | `machine-account-quota-check` | `tests/test_certification_discovery.py` | Fill after first lab run |
 | `privileged-group-inventory` | `tests/test_certification_discovery.py` | Fill after first lab run |
 
+The two discovery capabilities do not yet have evidence templates. A novice
+operator must **not** certify either one until the project maintainer supplies a
+reviewed template. Choose one of the six capabilities above that already has a
+template.
+
 ---
 
 ## 5. Universal checklist (every capability)
@@ -173,6 +271,26 @@ Only then: set `lab_certified=True` for **that one** capability in `adaf_redteam
 
 ## 6. Execution procedure
 
+### 6.0 Operator card — use one capability only
+
+Before each test, complete this card in the certification ticket. If any answer
+is unknown, stop and ask the lab administrator; do not guess.
+
+| Question | What to record |
+|---|---|
+| Capability ID | One ID from the matrix that has an evidence template |
+| Lab administrator | Name and contact method |
+| Independent reviewer | Name; must not be the certification owner |
+| Disposable-lab snapshot | Snapshot name and time it was taken |
+| Approved target | Exact name/IP from the written engagement |
+| Expected verdict | `Confirmed` or `NotExploitable`, as specified by the test |
+| Evidence template | Exact `docs/certifications/...` file |
+| Zerologon only | Packet capture started, filename, and storage location |
+
+**Stop immediately** if the target is not explicitly identified as disposable,
+the operator cannot restore the lab snapshot, the reviewer is unavailable, or a
+packet capture is unavailable for Zerologon.
+
 ### 6.1 Baseline offline suite
 
 ```bash
@@ -181,7 +299,23 @@ pytest -q
 
 Offline `--fixture` runs do **not** count as certification.
 
-### 6.2 Recommended live run order
+For Windows PowerShell, use the project-local interpreter so the result does
+not depend on a system-wide Python installation:
+
+```powershell
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+**Expected success:** a final summary similar to `123 passed` and exit code 0.
+The exact test count may change. If the command says the file does not exist,
+stop and ask the administrator to complete the approved project installation.
+If any test fails, do not run live tests; attach the complete output to the
+ticket and ask the project maintainer to investigate.
+
+### 6.2 Linux reference live run order (trained administrators only)
+
+The following Bash commands are not part of the Windows novice path. Do not
+paste them into PowerShell.
 
 ```bash
 set -a && source .env.lab && set +a
@@ -207,6 +341,35 @@ pytest tests/test_certification_zerologon.py -v
 7. Independent reviewer sign-off (§8)
 8. Promotion PR (§9) for **this capability only**
 9. After merge → next capability
+
+### 6.3.1 Windows live-test command and expected result
+
+Only after sections 2.1, 2.2, and the operator card are complete, load the
+administrator-provided local settings and run **one** certification test. The
+`--basetemp` option preserves otherwise temporary result files in an ignored
+local folder for evidence collection.
+
+```powershell
+. .\.env.lab.ps1
+.\.venv\Scripts\python.exe -m pytest tests\test_certification_asrep_roast.py -v -rA --basetemp .\certification-work\asrep-roast-validation
+```
+
+Replace only `asrep-roast-validation` and its matching test filename after the
+administrator has reviewed the capability's prerequisites. Never run the whole
+matrix as one command.
+
+**Expected success:** both test cases end in `PASSED`; the final line reports
+`2 passed`; the process exit code is 0. `UNVALIDATED` in the result at this
+stage is expected—the flag is not promoted yet.
+
+**Expected stopped/skipped result:** `SKIPPED` means required setup values or
+dependencies are absent. It is **not** success and creates no certification
+evidence. Give the skip reason to the lab administrator.
+
+**Expected failure handling:** if a test reports `FAILED`, an authorization or
+containment error, a redaction warning, or any unexpected verdict, **STOP.** Do
+not rerun it repeatedly, change the target, or disable a gate. Preserve the
+screen output and ask the lab administrator and reviewer to assess the lab.
 
 ### 6.4 Gate negative tests (record in evidence)
 
@@ -242,6 +405,39 @@ grep -Eri 'passwordset|netrserverpasswordset|nthash|-----BEGIN' <out>/ || echo c
 # LAPS / gMSA
 grep -Eri 'ms-mcs-admpwd:|managedpassword|msds-managedpassword|cleartext' <out>/ || echo clean
 ```
+
+### 7.2.1 Windows evidence collection (required)
+
+Do not manually search through pytest folders. After one green test, run the
+collector below. It finds the one preserved `validation-result.json`, scans it
+and any journal for common secret markers, copies only clean files to a
+predictable ignored folder, and creates a SHA-256 hash log. It does not copy a
+packet capture.
+
+```powershell
+.\.venv\Scripts\python.exe .\scripts\collect_certification_evidence.py `
+  --test-output-root .\certification-work\asrep-roast-validation `
+  --capability asrep-roast-validation `
+  --ticket YOUR-CERTIFICATION-TICKET
+```
+
+**Expected success:**
+
+```text
+PASS  Redaction scan: CLEAN
+PASS  Evidence saved to: certification-evidence\YOUR-CERTIFICATION-TICKET\asrep-roast-validation
+NEXT  Attach the copied files and collection-log.txt to the certification ticket. Do not commit this folder.
+```
+
+**If it reports `FAIL` or `possible secret material`:** **STOP.** Nothing has
+been copied. Do not open, email, attach, or commit the source files. Restrict
+access to the displayed source folder and immediately give the complete output
+to the security owner. The capability must not be promoted until the redaction
+issue is fixed and the lab is rerun under review.
+
+For Zerologon, separately record the packet capture's SHA-256 hash and its
+approved evidence-system location in the template. Do not place a raw packet
+capture in the Git repository.
 
 ### 7.3 Zerologon pcap expectations
 
@@ -365,7 +561,7 @@ De-certification is cheap and expected.
 
 ```text
 1. Disposable lab ready + ticket open
-2. source .env.lab   # ADAF_RT_LAB=1
+2. Windows: follow sections 2.2 and 6.3.1; Linux administrators: source .env.lab
 3. pytest -q
 4. pytest tests/test_certification_<capability>.py -v
 5. Redaction grep → clean

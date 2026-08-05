@@ -9,6 +9,13 @@ dist/
 .venv/
 venv/
 review-output/
+certification-evidence/
+certification-work/
+
+# Local certification settings can contain credentials.  The two supported
+# platform-specific files must remain local to the operator workstation.
+.env.lab
+.env.lab.ps1
 
 # Never commit real (operator-created) engagement files or results, anywhere.
 engagement*.json

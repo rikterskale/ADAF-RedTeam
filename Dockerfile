@@ -25,7 +25,8 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     ADAF_REDTEAM_SCHEMA_DIR=/opt/adaf-redteam/schemas
 
 RUN groupadd --system adaf && useradd --system --gid adaf --create-home --home-dir /home/adaf adaf \
-    && install --directory --owner=adaf --group=adaf --mode=0750 /out /opt/adaf-redteam
+    && install --directory --owner=adaf --group=adaf --mode=0750 /out \
+    && install --directory --owner=adaf --group=adaf --mode=0755 /opt/adaf-redteam
 
 COPY --from=build /wheels /wheels
 RUN python -m pip install --no-cache-dir --no-index --find-links=/wheels "adaf-redteam[all]" \

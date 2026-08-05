@@ -10,6 +10,12 @@ independent reviewer sign-off in `docs/CERTIFICATION.md`.
 — mental model, `.env.lab`, per-capability loop, evidence package, reviewer
 sign-off, one-capability promotion PR, worked example, and troubleshooting.
 
+**Using GOAD:** GOAD is an optional disposable Tier A lab, not a certification
+result. A coach/lab administrator installs and isolates it, then follows the
+[GOAD Certification Profile](GOAD_CERTIFICATION_PROFILE.md) to create dedicated
+`ADAF-Cert-*` objects. Do not use GOAD's built-in vulnerable training accounts
+as test fixtures.
+
 ## Capabilities covered
 
 | Capability | Test file | Evidence template |
@@ -29,6 +35,31 @@ sign-off, one-capability promotion PR, worked example, and troubleshooting.
 2. Editable install with extras: `python -m pip install -e ".[ldap,kerberos,dev]"`
 3. A written certification engagement that names exact targets and lab addresses.
 4. Packet capture capability on the operator host (required for Zerologon "no password-set" proof).
+
+### GOAD-specific readiness (coach/lab administrator)
+
+Before an operator loads lab settings, record in the ticket: GOAD revision,
+provider, actual AD DNS root, VM names/IPs, isolated network design, snapshot or
+rebuild identifier, and named operator/capture hosts. The GOAD VM network must
+have no production route, bridge, shared trust, or public exposure.
+
+On the GOAD DC or management host, run the profile in plan mode first:
+
+```powershell
+.\scripts\setup_goad_certification_profile.ps1 `
+  -ExpectedDomain 'ACTUAL.GOAD.DOMAIN' `
+  -IUnderstandThisIsAnIsolatedGOADLab
+```
+
+Expected result: `PLAN ONLY: No directory changes were made.` A domain mismatch,
+missing ActiveDirectory module, blocked script, or absent snapshot is a stop
+condition for the coach to resolve; the novice does not bypass it.
+
+After review, the coach runs the same command with `-Apply`, verifies the
+`PASS` messages, and reviews `certification-work/goad-profile.env.ps1`. That
+file contains object hints only. It must contain no password and must not be
+committed. Copy reviewed values, not blind defaults, into the local `.env.lab`
+or `.env.lab.ps1` used by the operator platform.
 
 ## Shared environment file
 
@@ -98,6 +129,23 @@ pytest tests/test_certification_discovery.py -v
 # 5. Zerologon detection (capture traffic in parallel)
 pytest tests/test_certification_zerologon.py -v
 ```
+
+### GOAD capability preparation matrix
+
+Prepare and certify one row at a time. Restore/rebuild GOAD between ambiguous
+or state-changing work; do not treat the profile as permission to run every
+test in sequence.
+
+| Capability | GOAD profile prerequisite | Expected value decision |
+|---|---|---|
+| AS-REP | Base profile users | Dedicated no-preauth user is `Confirmed`; normal user is `NotExploitable`. |
+| Kerberoast | Base profile SPN | Registered profile SPN is `Confirmed`; nonexistent profile SPN is `NotExploitable`. |
+| DCSync rights | `-IncludeDcsyncRights`, separately reviewed | Profile group is `Confirmed` only if both added rights are verified. |
+| LAPS read | `-IncludeLapsAcl`, separately reviewed | Profile LAPS group is `Confirmed` only after ACL verification. |
+| gMSA read | Base profile gMSA/group | Profile gMSA reader group is `Confirmed` after membership-ACL verification. |
+| Machine quota | No profile change | Record actual GOAD domain quota; never alter it only to obtain a desired verdict. |
+| Privileged-group inventory | Base profile inventory group | Enumerate the dedicated group; it is not Domain Admins. |
+| Zerologon detection | No profile change; capture required | Use actual patched/vulnerable result and prove zero password-set calls. |
 
 ## After each green live run
 

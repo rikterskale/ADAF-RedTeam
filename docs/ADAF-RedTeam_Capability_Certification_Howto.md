@@ -44,6 +44,31 @@ All must be true:
 If any prerequisite fails, stop. Do not weaken a gate or substitute a
 non-disposable environment.
 
+## GOAD acceptance gate
+
+GOAD may supply the disposable Tier A lab, but its intentional vulnerabilities
+are not certification evidence. The certification owner records the GOAD
+revision, provider, actual AD DNS root, VM inventory, isolated network design,
+and clean snapshot/rebuild identifier in the ticket.
+
+Use [GOAD Certification Profile](GOAD_CERTIFICATION_PROFILE.md) to create
+dedicated `ADAF-Cert-*` fixtures. Do not use pre-existing GOAD training accounts
+for positive or negative assertions: unrelated vulnerabilities make the result
+ambiguous. The profile's base objects are suitable for AS-REP, Kerberoast, gMSA,
+and inventory setup. Its DCSync and LAPS ACL flags require a separate snapshot,
+explicit review, and evidence of the exact ACL change.
+
+Before a live run, the reviewer confirms:
+
+1. The actual GOAD domain equals the profile script's `-ExpectedDomain` value.
+2. The `ADAF-Cert-*` object names, SIDs, DNs, and SPN were independently checked.
+3. The generated profile contains no secret and reviewed values—not the generated file itself—populate `.env.lab.ps1`.
+4. Expected verdicts are set per capability; a GOAD vulnerability alone never establishes `Confirmed`.
+5. Zerologon has no profile mutation; its verdict and zero-password-set proof come from the captured run.
+
+The profile is limited to Tier A. It does not authorize or prepare Tier B–E
+state-changing work.
+
 ## Certification tiers
 
 | Tier | Scope | Additional proof |

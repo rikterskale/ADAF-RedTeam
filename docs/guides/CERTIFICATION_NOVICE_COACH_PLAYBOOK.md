@@ -34,6 +34,70 @@ evidence template `docs/certifications/asrep-roast-validation.md`.
 The coach confirms that the lab is isolated, disposable, and restorable. If any
 item is unknown, the session does not start.
 
+## GOAD lab setup — coach does this before the session
+
+GOAD is a deliberately vulnerable practice Active Directory environment. It is
+appropriate only when the coach installs it as a **separate, isolated lab**.
+The operator does not install GOAD, select a cloud provider, configure virtual
+networking, or change Active Directory settings. Those are coach tasks.
+
+Before inviting the novice operator, the coach records in the ticket:
+
+| Check | What “ready” means |
+|---|---|
+| GOAD source | Official GOAD revision, deployment provider, and management-host name are recorded. |
+| Isolation | GOAD VM network has no production route, bridge, VPN route, shared trust, or public exposure. |
+| Restore point | All GOAD VMs have a named clean snapshot or documented rebuild method. |
+| Machines | Coach identifies the GOAD DC, separate operator workstation, and capture location if required. |
+| Actual domain | Coach runs `Get-ADDomain` and records the exact DNS root; examples are never values to copy. |
+| Credentials | Dedicated lab-only administrator and bind identity are available through the approved secret process. |
+
+Use [GOAD's official provider-specific deployment instructions](https://orange-cyberdefense.github.io/GOAD/installation/);
+do not use an internet-facing setup copied from an unreviewed source. The coach then uses the
+[GOAD Certification Profile](../GOAD_CERTIFICATION_PROFILE.md) to make new
+`ADAF-Cert-*` objects. GOAD's existing vulnerable training accounts are not
+used as certification fixtures.
+
+### Coach validation before the operator arrives
+
+On the isolated GOAD DC or its management host, the coach runs these read-only
+checks and records the results. They reveal names and status but not passwords:
+
+```powershell
+Import-Module ActiveDirectory
+Get-ADDomain | Select-Object DNSRoot, DistinguishedName
+Get-ADDomainController -Discover | Select-Object HostName, IPv4Address
+```
+
+Then the coach dry-runs the profile, replacing `ACTUAL.GOAD.DOMAIN` with the
+recorded value:
+
+```powershell
+.\scripts\setup_goad_certification_profile.ps1 `
+  -ExpectedDomain 'ACTUAL.GOAD.DOMAIN' `
+  -IUnderstandThisIsAnIsolatedGOADLab
+```
+
+**Good result:** `PLAN ONLY: No directory changes were made.`
+
+**If the domain does not match, the ActiveDirectory module is missing, or the
+script is blocked:** stop. The coach fixes the GOAD management-host setup using
+the approved process. The novice must not change PowerShell policy or bypass a
+security control.
+
+After the snapshot and reviewer acknowledgement, the coach creates the base
+profile with `-Apply`. The expected ending is:
+
+```text
+PASS  Dedicated GOAD certification objects are ready in OU=ADAF-Certification,...
+PASS  Profile hints written to ...\certification-work\goad-profile.env.ps1 (contains no passwords)
+```
+
+The coach checks that the profile contains only dedicated names, DNs, SIDs, and
+SPNs—not a password—then transfers only reviewed settings into `.env.lab.ps1`.
+The generated file is a hint sheet, not authorization and not a substitute for
+the written engagement.
+
 ## 1. Open PowerShell in the project folder
 
 Open **Windows Terminal**, select **PowerShell**, and use the exact project path
@@ -104,6 +168,26 @@ positive result and one normal account for the expected negative result. The
 operator does not change Active Directory settings. If the coach cannot confirm
 both accounts and the lab snapshot, stop.
 
+For GOAD profile setup, the coach additionally verifies the dedicated objects
+without displaying passwords:
+
+```powershell
+Get-ADUser ADAF-Cert-AsrepNoPreauth -Properties DoesNotRequirePreAuth |
+  Select-Object SamAccountName, DoesNotRequirePreAuth
+Get-ADUser ADAF-Cert-AsrepPreauth -Properties DoesNotRequirePreAuth |
+  Select-Object SamAccountName, DoesNotRequirePreAuth
+Get-ADUser ADAF-Cert-KerbService -Properties ServicePrincipalName |
+  Select-Object SamAccountName, ServicePrincipalName
+Get-ADGroup ADAF-Cert-InventoryGroup | Select-Object Name, SID
+Get-ADComputer ADAF-Cert-Laps01 | Select-Object Name, DistinguishedName
+Get-ADServiceAccount ADAF-Cert-Gmsa | Select-Object Name, DistinguishedName
+```
+
+**Good result:** the objects start with `ADAF-Cert-`; the first user reports
+`DoesNotRequirePreAuth` as `True`; the second reports `False`; and the service
+user lists `HTTP/adaf-cert-web.<actual-domain>`. If any object is missing or has
+an unexpected name, stop. The coach resolves it before the operator runs ADAF.
+
 ## 5. Run one live test
 
 For the first AS-REP session, load approved settings and run exactly this test.
@@ -160,6 +244,11 @@ Attach to the ticket:
 Then stop. The owner and reviewer use the
 [Certification Standard and Maintainer Checklist](../ADAF-RedTeam_Capability_Certification_Howto.md).
 The operator does not promote the capability.
+
+For a later capability, the coach first restores or confirms the clean GOAD
+snapshot, selects **one** GOAD profile row, sets only that test's expected
+verdict and target principal, then starts a new ticket checklist. The operator
+never runs the complete capability matrix in one session.
 
 ## Say this to the coach
 

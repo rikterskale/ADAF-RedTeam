@@ -165,7 +165,7 @@ adaf-redteam run \
   --capability asrep-roast-validation \
   --source-address 192.0.2.25 \
   --fixture examples/offline-full-fixture.example.json \
-  --finding-id F-OFFLINE000000001 \
+  --finding-id F-0FF1CE0000000000 \
   --control-id ADAF-OFFLINE \
   --out ./out-offline
 ```

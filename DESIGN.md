@@ -1,4 +1,4 @@
-# ADAF-RedTeam — Architecture & Design Spec (v0.1 draft)
+# ADAF-RedTeam — Architecture & Design Spec (v0.1)
 
 > Status: implemented architecture with an evolving capability registry. The
 > repository contains adapter-backed, offline-testable capability workflows, but
@@ -38,7 +38,7 @@ ADAF can mark a finding `Confirmed` without ever touching the proof material.
           │   NO secrets)                       ▼
   ┌───────┴────────┐   ingest     ┌───────────────────────────┐
   │ ADAF ingest    │  ◀─────────  │ validation-result.json     │
-  │ marks Confirmed│              │ (bridge schema, signed)    │
+  │ marks Confirmed│              │ (bridge schema + hash)     │
   └────────────────┘              └───────────────────────────┘
 ```
 
@@ -132,10 +132,10 @@ forges tickets, or issues certs stays lab-only.
 
 ```
 ADAF-RedTeam/
-├─ README.md                      # authorization-first; no beginner on-ramp
-├─ LICENSE                        # decide: MIT vs. a use-restricted license (§10)
+├─ README.md                      # authorization-first entry point and safe local links
+├─ LICENSE                        # proprietary license
 ├─ DESIGN.md                      # this file
-├─ pyproject.toml                 # Python 3.10+; pinned deps; extras per capability
+├─ pyproject.toml                 # Python 3.10+; dependency floors and extras
 ├─ SECURITY.md  THREAT-MODEL.md   # operator threat model + disclosure
 ├─ schemas/
 │  ├─ engagement.schema.json      # superset of ADAF's engagement file
@@ -146,17 +146,17 @@ ADAF-RedTeam/
 │  ├─ authz/                      # engagement parse, source-addr check, gates
 │  ├─ containment/                # lab-containment probe + guard
 │  ├─ redaction/                  # secret→handle redactor (single choke point)
-│  ├─ bridge/                     # emit/sign validation-result; ADAF-side ingest helper
+│  ├─ bridge/                     # emit hashed validation results; ADAF-side ingest helper
 │  ├─ evidence/                   # redacted journals, hashing, manifest
+│  ├─ probes/                     # live-primitive boundaries (currently uncertified)
 │  └─ capabilities/
 │     ├─ base.py                  # Capability ABC: plan(), execute(), cleanup()
-│     ├─ kerberos/  adcs/  credaccess/  lateral/  coercion_relay/
+│     ├─ kerberos/ adcs/ credaccess/ discovery/ detection/ lateral/ coercion/ netlogon/
 │     └─ registry.py              # id → class, readiness state, required technique
 ├─ bridge/
 │  └─ adaf_ingest.py              # drop-in: reads validation-result.json into ADAF run dir
-├─ labs/                          # disposable-lab build (Vagrant/terraform stubs)
 ├─ tests/                         # plan-only golden tests + redaction unit tests + schema tests
-└─ .github/workflows/ci.yml       # ruff, schema-validate, pip-audit, redaction tests, SBOM
+└─ .github/workflows/ci.yml       # lint, tests, generated-reference, guide, and container checks
 ```
 
 Optional heavy offensive deps (impacket, certipy-equivalents) live behind

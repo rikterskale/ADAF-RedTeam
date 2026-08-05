@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from ...lab_env import lab_dc
 from ..base import Capability, CapabilityResult
 
 # --- SAFE detection ------------------------------------------------------
@@ -38,11 +39,13 @@ class ZerologonDetectionCapability(Capability):
 
     def execute(self) -> CapabilityResult:
         probe = self.source or self._live_probe()
-        return analyze_detection(self.action.target, probe.zerologon_detect(self.action.target))
+        target = self.action.target
+        return analyze_detection(target, probe.zerologon_detect(target))
 
     def _live_probe(self):
         from ...probes.netlogon import LiveNetlogonProbe
-        return LiveNetlogonProbe(self.action.target)
+        # Prefer the certification-lab DC when the operator has opted in.
+        return LiveNetlogonProbe(lab_dc() or self.action.target)
 
 
 # --- Destructive reset (gated; primitive intentionally NOT implemented) --

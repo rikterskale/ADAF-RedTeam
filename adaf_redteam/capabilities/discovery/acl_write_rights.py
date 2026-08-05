@@ -19,6 +19,7 @@ performing any of the abuses it reports on.
 from __future__ import annotations
 
 from ...directory.acl import TAKEOVER_RIGHTS, Ace, effective_rights
+from ...lab_env import lab_bind_password, lab_bind_user, lab_dc, lab_target_principal
 from ..base import Capability, CapabilityResult
 
 
@@ -59,14 +60,25 @@ class AclWriteRightsCapability(Capability):
 
     def execute(self) -> CapabilityResult:
         source = self.source or self._live_source()
-        # action.target is the object under test. The target principal (whose
-        # rights we're inventorying) is passed alongside via source_address by
-        # convention here, since a discovery cap has no "attacker" — the caller
-        # picks which principal to inspect. In fixtures/tests this is a SID.
-        principal = getattr(self, "_principal_under_test", self.action.source_address)
+        # action.target is the object under test. Principal under test comes from
+        # lab override, capability injection, or (legacy) source_address.
+        principal = (
+            lab_target_principal()
+            or getattr(self, "_principal_under_test", None)
+            or self.action.source_address
+        )
         aces = source.object_acl(self.action.target)
         return analyze(principal, self.action.target, aces)
 
     def _live_source(self):
         from ...directory.ldap_source import LdapDirectorySource
-        return LdapDirectorySource(self.domain, user=self.action.source_address)
+        bind_user = lab_bind_user() or self.action.source_address
+        server = lab_dc() or self.domain
+        password = lab_bind_password()
+        use_ccache = password is None
+        return LdapDirectorySource(
+            server,
+            user=bind_user,
+            use_kerberos_ccache=use_ccache,
+            password=password,
+        )

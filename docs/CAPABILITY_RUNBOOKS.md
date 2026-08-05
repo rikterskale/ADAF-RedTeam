@@ -15,10 +15,11 @@ use**. `--fixture` exercises orchestration with offline input and produces an
 `Executable` means a read/metadata target class after certification; it does not
 mean a live primitive is available today.
 
-Every run needs the exact capability, source address, target, and ATT&CK
-technique in the engagement. Non-plan execution also needs `--finding-id` and
-`--control-id` for ADAF correlation. State-changing entries require verified lab
-containment and the additional approvals described in
+Every run needs the exact capability, supplied source-address value, target, and
+ATT&CK technique in the engagement. The CLI matches the supplied value but does
+not independently establish the host's address. Non-plan execution also needs
+`--finding-id` and `--control-id` for ADAF correlation. State-changing entries
+require a verified declared-lab containment check and the additional approvals described in
 [ENGAGEMENT_AUTHORING.md](ENGAGEMENT_AUTHORING.md).
 
 ## Catalog

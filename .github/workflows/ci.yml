@@ -22,6 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -43,6 +45,8 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -53,11 +57,32 @@ jobs:
       - name: Run tests, including redaction checks
         run: pytest -v
 
+  optional-dependencies:
+    name: Test optional capability dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install all supported dependencies
+        run: python -m pip install -e ".[all,dev]"
+      - name: Check dependency resolution
+        run: python -m pip check
+      - name: Run tests with optional parser dependencies
+        run: pytest -v
+
   documentation:
     name: Documentation and examples
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -77,6 +102,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -84,14 +111,17 @@ jobs:
           cache-dependency-path: pyproject.toml
       - name: Build source and wheel distributions
         run: |
-          python -m pip install build
+          python -m pip install build twine
           python -m build
+          twine check dist/*
 
   security:
     name: Dependency and secret checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -121,6 +151,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Build image
         run: docker build --pull --tag adaf-redteam:ci .
       - name: Verify hardened offline plan-only workflow

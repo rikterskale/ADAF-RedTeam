@@ -13,6 +13,8 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Build Windows image
         shell: pwsh
         run: docker build --pull --file Dockerfile.windows --tag adaf-redteam:windows-ci .

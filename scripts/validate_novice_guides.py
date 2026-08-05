@@ -7,11 +7,13 @@ from pathlib import Path
 GUIDES = (
     Path("docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md"),
     Path("docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md"),
+    Path("docs/guides/DOCKER_USABILITY_GUIDE.md"),
 )
 REQUIRED = ("# ADAF-RedTeam", "doctor", "--plan-only", "ADAF-RT-E202")
 VALIDATION_STATUS = {
     Path("docs/guides/WINDOWS_NOVICE_USABILITY_GUIDE.md"): "PARTIALLY VERIFIED",
     Path("docs/guides/LINUX_NOVICE_USABILITY_GUIDE.md"): "statically verified only",
+    Path("docs/guides/DOCKER_USABILITY_GUIDE.md"): "CI-verified container build and offline plan-only smoke test",
 }
 
 

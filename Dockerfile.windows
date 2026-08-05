@@ -1,0 +1,40 @@
+# escape=`
+# Windows containers require a Windows host compatible with LTSC 2022. Update the
+# reviewed digest through the normal dependency-review process.
+ARG PYTHON_IMAGE=python:3.12-windowsservercore-ltsc2022@sha256:035418c04b5e8fcb13c6b23f6c801a52c510c43e8bf27e2379d26ad8c40c87a7
+
+FROM ${PYTHON_IMAGE} AS build
+
+WORKDIR C:\build
+COPY pyproject.toml README.md LICENSE .\
+COPY adaf_redteam .\adaf_redteam
+RUN python -m pip wheel --wheel-dir C:\wheels ".[all]"
+
+FROM ${PYTHON_IMAGE} AS runtime
+
+LABEL org.opencontainers.image.title="ADAF-RedTeam" `
+      org.opencontainers.image.description="Authorization-first Active Directory validation CLI (Windows container)" `
+      org.opencontainers.image.licenses="LicenseRef-Proprietary"
+
+ENV PYTHONDONTWRITEBYTECODE=1 `
+    PYTHONUNBUFFERED=1 `
+    PIP_DISABLE_PIP_VERSION_CHECK=1 `
+    ADAF_REDTEAM_SCHEMA_DIR=C:\adaf-redteam\schemas
+
+RUN New-Item -ItemType Directory -Force C:\out, C:\adaf-redteam | Out-Null; `
+    icacls C:\out /grant '*S-1-5-32-545:(OI)(CI)M' | Out-Null
+
+COPY --from=build C:\wheels C:\wheels
+RUN python -m pip install --no-cache-dir --no-index --find-links=C:\wheels "adaf-redteam[all]"; `
+    Remove-Item -Recurse -Force C:\wheels
+
+COPY schemas C:\adaf-redteam\schemas
+COPY examples C:\adaf-redteam\examples
+COPY pyproject.toml README.md LICENSE C:\adaf-redteam\
+COPY docs\guides C:\adaf-redteam\docs\guides
+
+USER ContainerUser
+WORKDIR C:\adaf-redteam
+VOLUME ["C:\\out"]
+ENTRYPOINT ["adaf-redteam"]
+CMD ["doctor", "--out", "C:\\out"]

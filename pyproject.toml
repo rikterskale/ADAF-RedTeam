@@ -11,9 +11,10 @@ dependencies = ["jsonschema>=4.18"]
 # Heavy offensive dependencies are added per-capability, behind extras.
 # The Phase 1 read-only collector needs ldap3 (+ impacket for SD parsing).
 ldap = ["ldap3>=2.9", "impacket>=0.11"]
-kerberos = []
-adcs = []
-relay = []
+kerberos = ["impacket>=0.11"]
+adcs = ["impacket>=0.11"]
+relay = ["impacket>=0.11"]
+all = ["ldap3>=2.9", "impacket>=0.11"]
 dev = ["ruff>=0.6", "pytest>=8.0", "pip-audit>=2.7"]
 
 [project.scripts]

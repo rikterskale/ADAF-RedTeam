@@ -33,3 +33,26 @@ jobs:
           if grep -RIn "S3cr3t-Passw0rd-aabbccddeeff00112233" --include="*.json" --include="*.jsonl" .; then
             echo "secret-shaped string found in tracked output"; exit 1
           fi
+  container:
+    name: Container image smoke test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build image
+        run: docker build --pull --tag adaf-redteam:ci .
+      - name: Verify hardened offline plan-only workflow
+        run: |
+          mkdir out
+          docker run --rm --user "$(id -u):$(id -g)" --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+            --mount type=bind,source="$PWD/out",target=/out \
+            adaf-redteam:ci doctor --out /out
+          docker run --rm --user "$(id -u):$(id -g)" --network none --read-only --cap-drop ALL --security-opt no-new-privileges \
+            --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+            --mount type=bind,source="$PWD/out",target=/out \
+            adaf-redteam:ci run --engagement examples/engagement.example.json \
+            --capability adcs-esc1-validation --source-address 192.0.2.25 --plan-only --out /out
+          test -s out/plan.json
+          test -s out/manifest.json

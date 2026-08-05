@@ -33,6 +33,15 @@ For safe local setup and a no-network plan-only first run, see the
 [capability reference](docs/CAPABILITY_REFERENCE.md). Start with
 `adaf-redteam doctor`; it checks local prerequisites without contacting a target.
 
+The supported container workflow is documented in the
+[Docker guide](docs/guides/DOCKER_USABILITY_GUIDE.md). It supports the same
+offline, plan-only and fixture-backed workflows; it does not certify any live
+capability.
+
+Both Linux and Windows images include all capability adapters and optional Python
+runtime dependencies; their separate host requirements and build commands are in
+the [container platform support matrix](docs/CONTAINER_PLATFORM_SUPPORT.md).
+
 ## Status: Phase 2 (complete — all capabilities wired)
 
 Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
@@ -162,6 +171,22 @@ adaf-redteam run --engagement examples/engagement.example.json \
 
 Plan-only performs no network, authentication, KDC, mutation, or outbound
 activity. It writes the exact plan (targets, budgets, technique) for review.
+
+## Container (supported offline workflow)
+
+```bash
+docker build --pull -t adaf-redteam:local .
+mkdir -p out
+docker run --rm --user "$(id -u):$(id -g)" --network none --read-only --cap-drop ALL \
+  --security-opt no-new-privileges --tmpfs /tmp:rw,noexec,nosuid,size=16m \
+  --mount type=bind,source="$(pwd)/out",target=/out \
+  adaf-redteam:local run --engagement examples/engagement.example.json \
+  --capability adcs-esc1-validation --source-address 192.0.2.25 --plan-only --out /out
+```
+
+The image runs as an unprivileged user and requires an explicit writable output
+mount. Keep `--network none` for plan-only and fixture workflows. See the Docker
+guide for Windows PowerShell syntax and the support boundary.
 
 ## Feed a result back into ADAF
 

@@ -1,0 +1,25 @@
+name: Windows container
+
+on:
+  workflow_dispatch:
+
+jobs:
+  smoke-test:
+    # Windows containers need a Windows Docker daemon whose kernel version is
+    # compatible with the LTSC 2022 base. Register this label only on a dedicated,
+    # organization-managed runner; GitHub's Linux hosted runners cannot test it.
+    runs-on: [self-hosted, windows, docker-windows]
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Windows image
+        shell: pwsh
+        run: docker build --pull --file Dockerfile.windows --tag adaf-redteam:windows-ci .
+      - name: Verify unprivileged no-network plan-only workflow
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force out | Out-Null
+          docker run --rm --network none adaf-redteam:windows-ci doctor --out C:\out
+          docker run --rm --network none --mount "type=bind,source=$((Get-Location).Path)\out,target=C:\out" adaf-redteam:windows-ci run --engagement examples\engagement.example.json --capability adcs-esc1-validation --source-address 192.0.2.25 --plan-only --out C:\out
+          if (!(Test-Path out\plan.json) -or !(Test-Path out\manifest.json)) { throw 'expected output artifacts were not created' }

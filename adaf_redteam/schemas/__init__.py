@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import functools
 import json
+import os
 from pathlib import Path
 
 try:
@@ -15,7 +16,8 @@ try:
 except ImportError as exc:  # pragma: no cover
     raise ImportError("jsonschema is required. Install with: pip install jsonschema") from exc
 
-_SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas"
+_REPOSITORY_SCHEMA_DIR = Path(__file__).resolve().parents[2] / "schemas"
+_SCHEMA_DIR = Path(os.environ.get("ADAF_REDTEAM_SCHEMA_DIR", _REPOSITORY_SCHEMA_DIR))
 
 
 @functools.cache

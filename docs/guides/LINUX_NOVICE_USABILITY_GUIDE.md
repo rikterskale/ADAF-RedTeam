@@ -189,4 +189,8 @@ Repository: project files; terminal: command window; shell: Bash command languag
 
 ## Validation Record, Known Limitations, and Support Boundaries
 
-This guide is statically verified at `b67175e` on 2026-08-04. No Linux host, clean install, live target, fixture execution, cleanup recovery, or live capability was tested. It must be promoted only after a clean supported Linux CI/VM validation records the result.
+The prior static-validation record is at `b67175e` on 2026-08-04; it is
+historical evidence and does not validate the current checkout. No Linux host,
+clean install, live target, fixture execution, cleanup recovery, or live
+capability was tested. It must be promoted only after a clean supported Linux
+CI/VM validation records the result.

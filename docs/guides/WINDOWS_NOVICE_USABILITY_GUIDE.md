@@ -195,4 +195,8 @@ Repository: project files; terminal: command window; shell: command language; co
 
 ## Validation Record, Known Limitations, and Support Boundaries
 
-This guide is PARTIALLY VERIFIED at `b67175e` on 2026-08-04. The safe Windows workflow and disposable install were run; clean end-user installation, real AD, fixture execution, cleanup latch recovery, and every live capability were not. Do not claim native live support from this guide.
+The prior validation record is PARTIALLY VERIFIED at `b67175e` on 2026-08-04;
+it is historical evidence and does not validate the current checkout. The safe
+Windows workflow and disposable install were run; clean end-user installation,
+real AD, fixture execution, cleanup latch recovery, and every live capability
+were not. Do not claim native live support from this guide.

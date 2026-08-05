@@ -4,6 +4,10 @@
 
 Use `docs/CERTIFICATION_RUNBOOK.md` + a disposable lab → fill evidence templates → get independent reviewer sign-off → promote `lab_certified=True` **one capability at a time**.
 
+> **New to computers / terminals?** Use the coach-monitored playbook first:  
+> [`docs/guides/CERTIFICATION_NOVICE_COACH_PLAYBOOK.md`](guides/CERTIFICATION_NOVICE_COACH_PLAYBOOK.md)  
+> (senior red teamer required; AS-REP-first; expected output and STOP phrases).
+
 > **Policy sources:** [`CERTIFICATION.md`](CERTIFICATION.md) (gate, tiers, evidence, promotion) · [`CERTIFICATION_RUNBOOK.md`](CERTIFICATION_RUNBOOK.md) (env + run order) · [`certifications/`](certifications/) (per-capability templates)
 
 ---
@@ -556,6 +560,7 @@ De-certification is cheap and expected.
 | `tests/test_certification_*.py` | Lab-gated tests |
 | `adaf_redteam/capabilities/registry.py` | Sole place to flip `lab_certified` |
 | `adaf_redteam/lab_env.py` | Lab DC / bind / object-DN helpers |
+| `docs/guides/CERTIFICATION_NOVICE_COACH_PLAYBOOK.md` | Coach-monitored novice path |
 
 ## Appendix B — Quick promote one capability
 

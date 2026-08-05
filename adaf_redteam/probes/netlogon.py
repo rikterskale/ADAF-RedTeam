@@ -46,7 +46,7 @@ class LiveNetlogonProbe:
           - never modifies any machine-account password
         """
         _require_deps()
-        from impacket.dcerpc.v5 import nrpc, epm, transport
+        from impacket.dcerpc.v5 import epm, nrpc, transport
         from impacket.dcerpc.v5.dtypes import NULL
         from impacket.dcerpc.v5.rpcrt import DCERPCException
 
@@ -101,7 +101,7 @@ class LiveNetlogonProbe:
         finally:
             try:
                 dce.disconnect()
-            except Exception:  # pragma: no cover - best-effort cleanup
+            except Exception:  # pragma: no cover - best-effort cleanup  # noqa: S110, BLE001
                 pass
 
         # Explicit non-goals encoded in the return shape: no password-set call

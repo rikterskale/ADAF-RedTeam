@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import re
 import shutil
-import sys
 from datetime import UTC, datetime
 from pathlib import Path
 

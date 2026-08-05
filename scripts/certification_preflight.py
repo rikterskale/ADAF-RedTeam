@@ -39,7 +39,9 @@ def main() -> int:
     if launcher is None:
         failures |= not check(False, "python-launcher", "The Windows 'py' launcher was not found. Ask the approved software administrator to install Python 3.10 or later.")
     else:
-        version = subprocess.run([launcher, "-3", "--version"], text=True, capture_output=True)
+        version = subprocess.run(
+            [launcher, "-3", "--version"], text=True, capture_output=True, check=False
+        )
         failures |= not check(version.returncode == 0, "python-launcher", (version.stdout or version.stderr).strip())
 
     failures |= not check(Path("pyproject.toml").is_file(), "project-folder", "Run this script from the ADAF-RedTeam repository folder.")
@@ -64,7 +66,9 @@ def main() -> int:
     if git is None:
         failures |= not check(False, "secret-file-ignore", "Git was not found, so .gitignore could not be checked. Ask the project administrator to verify it.")
     else:
-        ignored = subprocess.run([git, "check-ignore", "-q", "--", ".env.lab.ps1"], capture_output=True).returncode == 0
+        ignored = subprocess.run(
+            [git, "check-ignore", "-q", "--", ".env.lab.ps1"], capture_output=True, check=False
+        ).returncode == 0
         failures |= not check(ignored, "secret-file-ignore", ".env.lab.ps1 must be ignored by Git")
 
     if failures:

@@ -3,41 +3,120 @@ name: CI
 on:
   push:
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  PYTHONDONTWRITEBYTECODE: "1"
 
 jobs:
+  lint:
+    name: Lint and syntax
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install development dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Lint
+        run: ruff check .
+      - name: Compile Python sources
+        run: python -m compileall -q adaf_redteam bridge scripts tests
+
   test:
+    name: Test (${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["3.10", "3.12"]
+        python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Install
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install development dependencies
         run: python -m pip install -e ".[dev]"
-      - name: Lint
-        run: ruff check .
-      - name: Tests (incl. redaction leak suite)
+      - name: Run tests, including redaction checks
         run: pytest -v
-      - name: Generated capability reference is current
+
+  documentation:
+    name: Documentation and examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install project dependencies
+        run: python -m pip install -e .
+      - name: Verify generated capability reference
         run: python scripts/generate_capability_reference.py --check
-      - name: Novice guides are present and safely linked
+      - name: Verify novice-guide safety boundaries
         run: python scripts/validate_novice_guides.py
-      - name: Dependency audit
-        run: pip-audit || true
-      - name: Secret-leak grep over tracked files
+      - name: Verify Markdown links and anchors
+        run: python scripts/validate_docs.py
+
+  package:
+    name: Build package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Build source and wheel distributions
         run: |
-          # Belt-and-braces: fail if a known secret-shaped test constant escapes into any tracked file.
-          if grep -RIn "S3cr3t-Passw0rd-aabbccddeeff00112233" --include="*.json" --include="*.jsonl" .; then
-            echo "secret-shaped string found in tracked output"; exit 1
+          python -m pip install build
+          python -m build
+
+  security:
+    name: Dependency and secret checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: pyproject.toml
+      - name: Install development dependencies
+        run: python -m pip install -e ".[dev]"
+      - name: Audit installed dependencies
+        run: pip-audit --strict
+      - name: Check tracked content for known test secrets
+        run: |
+          if git grep -n "S3cr3t-Passw0rd-aabbccddeeff00112233" -- '*.json' '*.jsonl'; then
+            echo "secret-shaped test constant found in tracked output" >&2
+            exit 1
           fi
+      - name: Check tracked content for common private-key and token shapes
+        run: |
+          if git grep -nE '-----BEGIN( [A-Z]+)? PRIVATE KEY-----|AKIA[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9_]{20,}' -- ':!tests/**' ':!review-output/**'; then
+            echo "potential secret found in tracked content" >&2
+            exit 1
+          fi
+
   container:
     name: Container image smoke test
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
       - name: Build image

@@ -45,9 +45,9 @@ the [container platform support matrix](docs/CONTAINER_PLATFORM_SUPPORT.md).
 
 ## Status: Phase 2 (complete — all capabilities wired)
 
-Phase 0 skeleton (CLI, authorization gate, redaction choke point, the three
-schemas, ADAF ingest bridge) is complete. Phase 1 adds read/metadata **proof**
-capabilities — all secret-free.
+Phase 0 skeleton (CLI, authorization gate, redaction choke point, the
+engagement and validation-result schemas, ADAF ingest bridge) is complete.
+Phase 1 adds read/metadata **proof** capabilities — all secret-free.
 
 Increment 1 — pure LDAP reads (no offensive packet, no secret):
 

@@ -2,6 +2,8 @@
 
 Commands:
   list-capabilities         Show the registry with readiness and technique.
+  reference                 Print the generated capability reference to stdout.
+  doctor                    Check local prerequisites without contacting a target.
   run --plan-only           Emit the exact plan for a capability. No side effects.
   run                       Execute an adapter-backed capability (or report none).
 """

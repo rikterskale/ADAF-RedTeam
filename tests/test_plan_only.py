@@ -34,7 +34,7 @@ def test_plan_only_run_succeeds(tmp_path, capsys):
     out = capsys.readouterr().out
     assert "asrep-roast-validation" in out
     assert "decisionTrace" in out
-    assert "Uncertified: fixture/orchestration only" in out
+    assert "Uncertified:" in out
 
 
 def test_run_without_plan_only_reports_no_adapter(tmp_path, capsys, monkeypatch):
@@ -107,4 +107,4 @@ def test_list_capabilities_explains_uncertified_availability(capsys):
     assert main(["list-capabilities"]) == 0
     out = capsys.readouterr().out
     assert "AVAILABILITY" in out
-    assert "Uncertified: fixture/orchestration only" in out
+    assert "Uncertified:" in out

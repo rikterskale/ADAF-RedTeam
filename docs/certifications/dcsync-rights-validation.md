@@ -31,7 +31,7 @@ reviews and signs off (§7).
 | # | Requirement | Status |
 |---|---|---|
 | 1 | Live primitive implemented (bounded to `plan()`) | ✅ implemented, LDAPS-only, DACL-only, one attribute per search |
-| 2 | Analyzer/orchestration behavior unchanged; offline tests pass | ✅ 103 offline tests pass |
+| 2 | Analyzer/orchestration behavior unchanged; offline tests pass | ✅ offline suite green in CI (`pytest`) |
 | 3 | Redaction proven on live run | ⬜ TODO — run and paste grep result below |
 | 4 | Authorization gate honored on live run | ⬜ TODO |
 | 5 | Idempotent, bounded, interval-respecting | ⬜ TODO |

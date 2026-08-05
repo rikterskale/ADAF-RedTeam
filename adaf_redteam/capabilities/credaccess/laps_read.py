@@ -8,7 +8,13 @@ ControlAccess on that attribute — WITHOUT reading the password value.
 from __future__ import annotations
 
 from ...directory.acl import Ace, effective_rights
-from ...lab_env import lab_bind_password, lab_bind_user, lab_dc
+from ...lab_env import (
+    lab_bind_password,
+    lab_bind_user,
+    lab_dc,
+    lab_laps_computer_dn,
+    lab_target_principal,
+)
 from ..base import Capability, CapabilityResult
 
 LAPS_ATTRIBUTES = ("ms-Mcs-AdmPwd", "ms-LAPS-Password", "ms-LAPS-EncryptedPassword")
@@ -39,19 +45,30 @@ def analyze(target: str, computer_dn: str, attribute: str, aces: list[Ace]) -> C
 
 class LapsReadCapability(Capability):
     def plan(self) -> dict:
+        principal, computer_dn = self._principal_and_computer()
         return {
             "capabilityId": "laps-read-authorization",
             "reads": f"ACL for one of {LAPS_ATTRIBUTES} on the target computer",
             "does_not": ["read the LAPS password value", "any write"],
             "target": self.action.target,
+            "principal": principal,
+            "computer": computer_dn,
             "domain": self.domain,
         }
 
     def execute(self) -> CapabilityResult:
         source = self.source or self._live_source()
         attribute = LAPS_ATTRIBUTES[0]
-        aces = source.object_acl(self.action.target, attribute=attribute)
-        return analyze(self.action.target, self.action.target, attribute, aces)
+        principal, computer_dn = self._principal_and_computer()
+        aces = source.object_acl(computer_dn, attribute=attribute)
+        return analyze(principal, computer_dn, attribute, aces)
+
+    def _principal_and_computer(self) -> tuple[str, str]:
+        # Lab certification may supply principal and computer DN separately.
+        # Offline fixtures and simple engagements use action.target for both.
+        principal = lab_target_principal() or self.action.target
+        computer_dn = lab_laps_computer_dn() or self.action.target
+        return principal, computer_dn
 
     def _live_source(self):
         from ...directory.ldap_source import LdapDirectorySource

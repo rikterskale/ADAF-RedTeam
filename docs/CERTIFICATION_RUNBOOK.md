@@ -1,9 +1,9 @@
 # Certification Runbook — Tier A First Wave
 
-This runbook drives the lab-gated certification tests for the first-wave
-**read/metadata** capabilities. It does **not** authorize production use and
-does **not** flip `lab_certified` flags. Promotion still requires the evidence
-package + independent reviewer sign-off in `docs/CERTIFICATION.md`.
+This runbook drives the lab-gated certification tests for **read/metadata**
+capabilities. It does **not** authorize production use and does **not** flip
+`lab_certified` flags. Promotion still requires the evidence package +
+independent reviewer sign-off in `docs/CERTIFICATION.md`.
 
 ## Capabilities covered
 
@@ -12,7 +12,11 @@ package + independent reviewer sign-off in `docs/CERTIFICATION.md`.
 | `asrep-roast-validation` | `tests/test_certification_asrep_roast.py` | `docs/certifications/asrep-roast-validation.md` |
 | `kerberoast-validation` | `tests/test_certification_kerberoast.py` | `docs/certifications/kerberoast-validation.md` |
 | `dcsync-rights-validation` | `tests/test_certification_dcsync_rights.py` | `docs/certifications/dcsync-rights-validation.md` |
-| `zerologon-detection` | `tests/test_certification_zerologon.py` | create under `docs/certifications/` after first lab run |
+| `zerologon-detection` | `tests/test_certification_zerologon.py` | `docs/certifications/zerologon-detection.md` |
+| `laps-read-authorization` | `tests/test_certification_laps_read.py` | `docs/certifications/laps-read-authorization.md` |
+| `gmsa-read-authorization` | `tests/test_certification_gmsa_read.py` | `docs/certifications/gmsa-read-authorization.md` |
+| `machine-account-quota-check` | `tests/test_certification_discovery.py` | (fill after first lab run) |
+| `privileged-group-inventory` | `tests/test_certification_discovery.py` | (fill after first lab run) |
 
 ## Preconditions
 
@@ -31,6 +35,8 @@ export ADAF_RT_LAB=1
 export ADAF_RT_LAB_DOMAIN=corp.contoso.test
 export ADAF_RT_LAB_DC=dc01.corp.contoso.test
 export ADAF_RT_LAB_SOURCE_ADDR=10.10.0.50
+export ADAF_RT_LAB_BIND_USER='CORP\\certuser'
+# export ADAF_RT_LAB_BIND_PASSWORD='...'   # only if not using Kerberos ccache
 
 # AS-REP
 export ADAF_RT_LAB_ASREP_ROASTABLE_USER=svc-nopreauth
@@ -41,15 +47,23 @@ export ADAF_RT_LAB_KERBEROAST_SPN=MSSQLSvc/db01.corp.contoso.test
 export ADAF_RT_LAB_KERBEROAST_MISSING_SPN=http/does-not-exist.corp.contoso.test
 export KRB5CCNAME=/tmp/lab.ccache
 
-# DCSync rights
-export ADAF_RT_LAB_BIND_USER='CORP\\certuser'   # or UPN
-# export ADAF_RT_LAB_BIND_PASSWORD='...'       # only if not using Kerberos ccache
-export ADAF_RT_LAB_TARGET_PRINCIPAL='S-1-5-21-...-512'  # Domain Admins or other known holder
+# DCSync / LAPS / gMSA principal under test
+export ADAF_RT_LAB_TARGET_PRINCIPAL='S-1-5-21-...-512'
 export ADAF_RT_LAB_EXPECTED=Confirmed
+
+# LAPS
+export ADAF_RT_LAB_LAPS_COMPUTER_DN='CN=PC01,CN=Computers,DC=corp,DC=contoso,DC=test'
+
+# gMSA
+export ADAF_RT_LAB_GMSA_DN='CN=gmsa-web,CN=Managed Service Accounts,DC=corp,DC=contoso,DC=test'
 
 # Zerologon detection
 export ADAF_RT_LAB_ZEROLOGON_TARGET=DC01
-# Override EXPECTED per-capability when needed
+
+# Discovery
+export ADAF_RT_LAB_QUOTA_EXPECTED=Confirmed
+export ADAF_RT_LAB_PRIV_GROUP_DN='CN=Domain Admins,CN=Users,DC=corp,DC=contoso,DC=test'
+export ADAF_RT_LAB_PRIV_EXPECTED=Confirmed
 ```
 
 Load it:
@@ -64,14 +78,17 @@ set -a && source .env.lab && set +a
 # 1. Offline suite must stay green
 pytest -q
 
-# 2. AS-REP (positive + negative accounts)
+# 2. Kerberos metadata
 pytest tests/test_certification_asrep_roast.py -v
-
-# 3. Kerberoast (existing SPN + missing SPN)
 pytest tests/test_certification_kerberoast.py -v
 
-# 4. DCSync rights
+# 3. LDAP rights / membership
 pytest tests/test_certification_dcsync_rights.py -v
+pytest tests/test_certification_laps_read.py -v
+pytest tests/test_certification_gmsa_read.py -v
+
+# 4. Discovery
+pytest tests/test_certification_discovery.py -v
 
 # 5. Zerologon detection (capture traffic in parallel)
 pytest tests/test_certification_zerologon.py -v

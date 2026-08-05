@@ -1,8 +1,11 @@
-"""Live protocol probes (Kerberos, Netlogon) for Phase 1 increment 2.
+"""Live protocol probes for Kerberos, Netlogon, ADCS, RBCD, ShadowCred, coercion,
+relay, credential-access, execution, forgery, and emulation.
 
-Unlike the LDAP reads in increment 1, these speak live protocol. Each live probe
-is NOT lab-certified in this build (its methods raise), so capabilities using them
-ship lab_certified=False and the CLI stamps results UNVALIDATED. Analyzers are
+Every probe is the lab-certification boundary for its capability. Most methods
+raise NotImplementedError today; the Kerberos AS-REP/TGS probes are implemented
+and offline-tested but still ship lab_certified=False, so the CLI stamps their
+results UNVALIDATED until a disposable-lab certification test promotes them.
+Analyzers are
 unit-tested; the live probe is the certification boundary. Use --fixture to run
 the pipeline offline.
 """

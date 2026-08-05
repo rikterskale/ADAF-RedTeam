@@ -1,4 +1,5 @@
-"""Plan-only and gate behavior. Phase 0 executes nothing."""
+"""Plan-only, doctor, and gate-behavior tests. Exercises the CLI's no-network
+paths and the state-changing gate; fixture-execution paths live elsewhere."""
 
 from adaf_redteam.__main__ import main
 from adaf_redteam.authz import GateError, authorize, load_engagement

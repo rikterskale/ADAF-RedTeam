@@ -217,6 +217,14 @@ an existing `resultId` before retrying. See
 [ADAF_BRIDGE_INTEGRATION.md](ADAF_BRIDGE_INTEGRATION.md) for review and handoff
 requirements.
 
+## Environment variables
+
+| Variable | Read by | Purpose |
+|---|---|---|
+| `ADAF_RT_LAB` | CLI `run` | Set to `1` to acknowledge disposable-lab certification-development work. It does not bypass authorization, containment, cleanup, or redaction. Do not set it for routine use; follow [CERTIFICATION.md](CERTIFICATION.md). |
+| `ADAF_REDTEAM_SCHEMA_DIR` | Schema loader | Optional override for the directory containing `engagement.schema.json` and `validation-result.schema.json`. Defaults to the repository's top-level `schemas/` directory. Set by the supported container images to `/opt/adaf-redteam/schemas` (Linux) or `C:\adaf-redteam\schemas` (Windows). |
+| `KRB5CCNAME` | Live Kerberos TGS probe | Path to a Kerberos credential cache holding an operator TGT for the target realm. Consumed only during certification-development work on the Kerberos TGS live path. |
+
 ## Command safety checklist
 
 Before a `run` command, verify the written ROE, exact source and target,

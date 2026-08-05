@@ -29,16 +29,6 @@ class ContainmentProbe:
     probe_id: str = ""
     probed_at_utc: str = ""
 
-    def to_record(self) -> dict:
-        return {
-            "probeId": self.probe_id,
-            "probedAtUtc": self.probed_at_utc,
-            "domain": self.domain,
-            "verified": self.verified,
-            "environment": self.environment,
-            "checks": self.checks,
-        }
-
 
 def _probe_id() -> str:
     return "CP-" + hashlib.sha256(os.urandom(16)).hexdigest()[:16].upper()

@@ -16,5 +16,4 @@ engagement*.json
 validation-result.json
 validation-linkage.json
 transaction-journal*.jsonl
-containment-verification.json
 manifest.json

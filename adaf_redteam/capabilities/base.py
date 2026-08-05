@@ -5,8 +5,9 @@ Every capability implements three phases:
   execute() -> perform the bounded action against an authorized target.
   cleanup() -> reverse any state change and verify reversal.
 
-Phase 0 ships no concrete subclasses. The base exists so the CLI, gate, and
-bridge are testable and so later phases have one shape to conform to.
+Concrete subclasses live under capabilities/{group}/; every registered capability
+is adapter-backed today. State-changing subclasses override cleanup() to reverse
+their mutation and set the durableResidue field where reversal is not full.
 """
 
 from __future__ import annotations

@@ -140,8 +140,7 @@ ADAF-RedTeam/
 ├─ SECURITY.md  THREAT-MODEL.md   # operator threat model + disclosure
 ├─ schemas/
 │  ├─ engagement.schema.json      # superset of ADAF's engagement file
-│  ├─ validation-result.schema.json   # THE BRIDGE (see §5)
-│  └─ containment-probe.schema.json
+│  └─ validation-result.schema.json   # THE BRIDGE (see §5)
 ├─ adaf_redteam/
 │  ├─ __main__.py                 # CLI: run --engagement … --capability …
 │  ├─ authz/                      # engagement parse, source-addr check, gates

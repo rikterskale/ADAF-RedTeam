@@ -165,6 +165,14 @@ generated [capability reference](docs/CAPABILITY_REFERENCE.md).
 python -m pip install -e ".[dev]"
 ```
 
+The supported install paths are this editable install and the container images
+described below. The JSON schemas live in the repository's top-level `schemas/`
+directory (outside the Python package) so ADAF and other consumers can read them
+without importing Python; a plain wheel install would not carry them. The
+container images copy the schemas to `/opt/adaf-redteam/schemas` (Linux) or
+`C:\adaf-redteam\schemas` (Windows) and set `ADAF_REDTEAM_SCHEMA_DIR` accordingly.
+The project is marked `Private :: Do Not Upload`; it is not distributed as a wheel.
+
 ## Plan-only run
 
 ```bash

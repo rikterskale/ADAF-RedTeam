@@ -3,6 +3,10 @@ name: Windows container
 on:
   workflow_dispatch:
 
+# Workflow-level least privilege; the smoke-test job re-declares what it needs.
+permissions:
+  contents: read
+
 jobs:
   smoke-test:
     # Windows containers need a Windows Docker daemon whose kernel version is

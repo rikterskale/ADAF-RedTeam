@@ -91,6 +91,9 @@ jobs:
       - name: Install development dependencies
         run: python -m pip install -e ".[dev]" pytest-cov
       - name: Run tests with coverage and JUnit output
+        # Pin the shell so backslash continuations parse the same everywhere;
+        # Windows would otherwise use pwsh and reject the shell continuation.
+        shell: bash
         run: |
           pytest -v --junitxml=junit.xml \
             --cov=adaf_redteam --cov=bridge --cov-report=term \
@@ -339,14 +342,17 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile
+          # DL3006: base image tag — the ARG resolves to a digest-pinned tag
+          #         (python:3.12-slim-bookworm@sha256:...), which hadolint
+          #         cannot see through the ARG substitution.
           # DL3008: pin apt versions — not applicable to python:*-slim.
           # DL3059: multiple consecutive RUN — intentional for image layer order.
-          ignore: DL3008,DL3059
+          ignore: DL3006,DL3008,DL3059
       - name: Lint Dockerfile (Windows)
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.windows
-          ignore: DL3008,DL3059,DL3018
+          ignore: DL3006,DL3008,DL3059,DL3018
 
   # ---------------------------------------------------------------------
   # Container: build image, run doctor + plan-only smoke under hardened flags

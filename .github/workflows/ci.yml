@@ -352,7 +352,21 @@ jobs:
         uses: hadolint/hadolint-action@v3.1.0
         with:
           dockerfile: Dockerfile.windows
-          ignore: DL3006,DL3008,DL3059,DL3018
+          # Windows Dockerfiles use native Windows path syntax that hadolint,
+          # which targets POSIX Docker, cannot parse:
+          #   DL3021 — `COPY ... .\` reads as "no trailing /" but is the
+          #            correct Windows form.
+          #   DL4006 — Windows `RUN` executes under pwsh, not sh; the
+          #            pipefail guidance does not apply.
+          #   SC1001 — shellcheck-informational noise on `\w` / `\o` in the
+          #            Windows path (`C:\adaf-redteam\...`), not shell escapes.
+          #   DL3006 — the base image tag comes from an ARG that resolves to
+          #            a digest-pinned reference; hadolint can't see through
+          #            the ARG substitution.
+          #   DL3008 — apt version pinning; not applicable on windowsservercore.
+          #   DL3018 — apk version pinning; not applicable on windowsservercore.
+          #   DL3059 — multiple consecutive RUN — intentional for layer order.
+          ignore: DL3006,DL3008,DL3018,DL3021,DL3059,DL4006,SC1001
 
   # ---------------------------------------------------------------------
   # Container: build image, run doctor + plan-only smoke under hardened flags

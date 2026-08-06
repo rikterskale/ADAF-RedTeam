@@ -1,0 +1,8 @@
+# actionlint configuration — see https://github.com/rhysd/actionlint/blob/main/docs/config.md
+#
+# Declare custom self-hosted runner labels that actionlint can't otherwise
+# know about. The Windows container workflow requires an organization-managed
+# runner tagged with all three labels; see docs/CONTAINER_PLATFORM_SUPPORT.md.
+self-hosted-runner:
+  labels:
+    - docker-windows

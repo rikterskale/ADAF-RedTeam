@@ -1,0 +1,11 @@
+# zizmor configuration — see https://docs.zizmor.sh/configuration/
+#
+# `unpinned-uses` is disabled by policy: every workflow in this repository
+# pins third-party actions to a major version tag (`@vN`). Full commit-SHA
+# pinning is a legitimate hardening but requires companion Dependabot or
+# Renovate maintenance to keep pins current; adopting it is a follow-up
+# decision, not a silent CI change. Every other zizmor audit remains
+# enforced at its default severity.
+rules:
+  unpinned-uses:
+    disable: true

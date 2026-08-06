@@ -232,6 +232,17 @@ requirements.
 | `ADAF_REDTEAM_SCHEMA_DIR` | Schema loader | Optional override for the directory containing `engagement.schema.json` and `validation-result.schema.json`. Defaults to the repository's top-level `schemas/` directory. Set by the supported container images to `/opt/adaf-redteam/schemas` (Linux) or `C:\adaf-redteam\schemas` (Windows). |
 | `KRB5CCNAME` | Live Kerberos TGS probe | Path to a Kerberos credential cache holding an operator TGT for the target realm. Consumed only during certification-development work on the Kerberos TGS live path. |
 
+The following certification-development knobs are consumed only when `ADAF_RT_LAB=1`; production engagement runs are unaffected. See [CERTIFICATION_RUNBOOK.md](CERTIFICATION_RUNBOOK.md) for the full lab setup.
+
+| Variable | Read by | Purpose |
+|---|---|---|
+| `ADAF_RT_LAB_DC` | Kerberos, Netlogon, and LDAP live paths | Optional KDC / LDAP server hostname or IP override for the lab. When unset, callers fall back to the domain name (Windows KDCs typically answer on the domain SRV record). |
+| `ADAF_RT_LAB_BIND_USER` | LDAP live paths | Optional LDAP bind principal for certification runs. Kerberos ccache is preferred over a bind user/password. |
+| `ADAF_RT_LAB_BIND_PASSWORD` | LDAP live paths | Optional SIMPLE-bind password. Only used when Kerberos ccache is not configured; never logged. |
+| `ADAF_RT_LAB_TARGET_PRINCIPAL` | DCSync / LAPS / gMSA live paths | Principal SID or DN under test for rights-check capabilities. |
+| `ADAF_RT_LAB_LAPS_COMPUTER_DN` | LAPS live path | Computer object DN whose LAPS attribute ACL is read. |
+| `ADAF_RT_LAB_GMSA_DN` | gMSA live path | gMSA object DN whose `msDS-GroupMSAMembership` is read. |
+
 ## Command safety checklist
 
 Before a `run` command, verify the written ROE, exact source and target,

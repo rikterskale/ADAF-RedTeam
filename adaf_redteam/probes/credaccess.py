@@ -14,7 +14,7 @@ def _require_deps():
         import impacket  # noqa: F401
     except ImportError as exc:  # pragma: no cover
         raise ImportError(
-            "live NTDS/DPAPI reader needs the 'credaccess' extra: pip install -e '.[credaccess]'"
+            "live NTDS/DPAPI reader needs the 'kerberos' extra (impacket): pip install -e '.[kerberos]'"
         ) from exc
 
 

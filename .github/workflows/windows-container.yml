@@ -13,10 +13,11 @@ jobs:
     # compatible with the LTSC 2022 base. Register this label only on a dedicated,
     # organization-managed runner; GitHub's Linux hosted runners cannot test it.
     runs-on: [self-hosted, windows, docker-windows]
+    timeout-minutes: 20
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
       - name: Build Windows image

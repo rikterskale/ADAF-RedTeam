@@ -11,5 +11,6 @@ jobs:
   dependency-review:
     name: Review dependency changes
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/dependency-review-action@c3400c2f38909e0dcf3c3a41f2030a8217be5d3e # v4

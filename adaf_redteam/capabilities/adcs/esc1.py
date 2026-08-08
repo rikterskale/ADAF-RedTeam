@@ -54,7 +54,7 @@ class Esc1Capability(Capability):
         self.journal.append({"op": "enroll", "ca": ca, "issued": got_cert,
                              "serialLast4": serial[-4:]})
 
-        refs = {"ca": ca, "requestedSan": san}
+        refs: dict[str, object] = {"ca": ca, "requestedSan": san}
         if got_cert and issued.get("pfx") is not None:
             # Secret material -> handle immediately; the PFX never leaves the vault.
             pfx_handle = self.vault.redact(issued["pfx"], "pfx")

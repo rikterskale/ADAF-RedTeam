@@ -36,7 +36,7 @@ def _probe_id() -> str:
 
 def _all_in_ranges(addresses: list[str], ranges: list[str]) -> tuple[bool, list[str]]:
     """Return (all_in, offenders). An address that fails to parse is an offender."""
-    nets = []
+    nets: list[ipaddress.IPv4Network | ipaddress.IPv6Network | None] = []
     for r in ranges:
         try:
             nets.append(ipaddress.ip_network(r, strict=False))

@@ -58,6 +58,8 @@ class GmsaReadCapability(Capability):
     def _principal_and_gmsa(self) -> tuple[str, str]:
         principal = lab_target_principal() or self.action.target
         gmsa_dn = lab_gmsa_dn() or getattr(self, "_gmsa_under_test", self.action.target)
+        if not isinstance(gmsa_dn, str):
+            gmsa_dn = self.action.target
         return principal, gmsa_dn
 
     def _live_source(self):

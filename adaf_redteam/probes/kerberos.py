@@ -20,7 +20,7 @@ in the ccache pointed to by `KRB5CCNAME`.
 from __future__ import annotations
 
 import datetime
-import random
+import secrets
 
 
 def _require_deps():
@@ -81,7 +81,7 @@ def build_asrep_probe_request(user: str, domain: str, *, nonce: int | None = Non
     now = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(hours=1)
     req_body["till"] = KerberosTime.to_asn1(now)
     req_body["rtime"] = KerberosTime.to_asn1(now)
-    req_body["nonce"] = int(nonce if nonce is not None else random.getrandbits(31))
+    req_body["nonce"] = int(nonce if nonce is not None else secrets.randbits(31))
 
     # Advertise strong ciphers first so an RC4 AS-REP from a modern KDC is a
     # deliberate signal (the account is stored with an RC4-only key, i.e. a

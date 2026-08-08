@@ -15,14 +15,18 @@ import json
 import os
 import sys
 from pathlib import Path
+from typing import Any
 
 from .capabilities.registry import get_descriptor, list_descriptors
 from .evidence import write_manifest, write_plan
 from .reference import availability, render_capability_reference
 
 try:
-    from .authz import GateError, authorize, load_engagement
-    _AUTHZ_IMPORT_ERROR = None
+    from .authz import GateError as _GateError, authorize as _authorize, load_engagement as _load_engagement
+    GateError: Any = _GateError
+    authorize: Any = _authorize
+    load_engagement: Any = _load_engagement
+    _AUTHZ_IMPORT_ERROR: ImportError | None = None
 except ImportError as exc:  # Let `doctor` explain a missing base dependency.
     GateError = Exception
     authorize = None
@@ -158,7 +162,11 @@ def _cmd_run(args: argparse.Namespace) -> int:
         }
         if descriptor.adapter is not None:
             from .redaction import SecretVault
-            plan_domain = args.domain or (engagement.authorized_domains or [None])[0]
+            plan_domain = args.domain
+            if plan_domain is None:
+                if not engagement.authorized_domains:
+                    raise ValueError("engagement has no authorized domain")
+                plan_domain = engagement.authorized_domains[0]
             with SecretVault() as _v:
                 # plan() is contractually side-effect-free.
                 plan["capabilityPlan"] = descriptor.adapter(action, _v, domain=plan_domain).plan()

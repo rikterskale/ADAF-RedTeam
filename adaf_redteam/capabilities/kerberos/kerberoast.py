@@ -14,20 +14,22 @@ from ..base import Capability, CapabilityResult
 
 def analyze(spn: str, meta: dict) -> CapabilityResult:
     obtained = bool(meta.get("obtained"))
-    etype = meta.get("etype")
+    etype_raw = meta.get("etype")
+    etype = etype_raw if isinstance(etype_raw, int) else None
+    etype_name = ETYPE_NAMES.get(etype, "unknown") if etype is not None else "unknown"
     weak = etype in WEAK_ETYPES
     return CapabilityResult(
         verdict="Confirmed" if obtained else "NotExploitable",
         proof_class="kerberoast-service-ticket-obtained" if obtained else "kerberoast-no-ticket",
         assertions=[
             f"A service ticket for the SPN was {'obtained' if obtained else 'not obtained'}.",
-            f"TGS encryption type: {ETYPE_NAMES.get(etype, 'unknown')}"
+            f"TGS encryption type: {etype_name}"
             + (" (weak / crackable)" if weak else ""),
             "The crackable TGS blob was NOT returned or exported.",
         ],
         redacted_refs={
             "targetSpn": spn,
-            "etype": ETYPE_NAMES.get(etype, str(etype)),
+            "etype": etype_name if etype is not None else str(etype_raw),
             "weakEtype": "yes" if weak else "no",
         },
     )

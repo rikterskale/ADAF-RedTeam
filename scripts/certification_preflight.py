@@ -9,7 +9,7 @@ from __future__ import annotations
 import argparse
 import re
 import shutil
-import subprocess
+import subprocess  # nosec B404 - fixed commands, shell=False, and shutil.which validation
 from pathlib import Path
 
 CAPABILITY_VARIABLES = {
@@ -40,7 +40,7 @@ def main() -> int:
         failures |= not check(False, "python-launcher", "The Windows 'py' launcher was not found. Ask the approved software administrator to install Python 3.10 or later.")
     else:
         version = subprocess.run(
-            [launcher, "-3", "--version"], text=True, capture_output=True, check=False
+            [launcher, "-3", "--version"], text=True, capture_output=True, check=False  # nosec B603
         )
         failures |= not check(version.returncode == 0, "python-launcher", (version.stdout or version.stderr).strip())
 
@@ -67,7 +67,7 @@ def main() -> int:
         failures |= not check(False, "secret-file-ignore", "Git was not found, so .gitignore could not be checked. Ask the project administrator to verify it.")
     else:
         ignored = subprocess.run(
-            [git, "check-ignore", "-q", "--", ".env.lab.ps1"], capture_output=True, check=False
+            [git, "check-ignore", "-q", "--", ".env.lab.ps1"], capture_output=True, check=False  # nosec B603
         ).returncode == 0
         failures |= not check(ignored, "secret-file-ignore", ".env.lab.ps1 must be ignored by Git")
 

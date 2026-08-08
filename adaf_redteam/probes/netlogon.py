@@ -102,7 +102,7 @@ class LiveNetlogonProbe:
             try:
                 dce.disconnect()
             except Exception:  # pragma: no cover - best-effort cleanup  # noqa: S110, BLE001
-                pass
+                log.debug("Netlogon disconnect failed during cleanup", exc_info=True)
 
         # Explicit non-goals encoded in the return shape: no password-set call
         # was made, no machine-account bytes were touched.

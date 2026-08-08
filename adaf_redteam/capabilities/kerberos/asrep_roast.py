@@ -14,20 +14,22 @@ from ..base import Capability, CapabilityResult
 
 def analyze(user: str, meta: dict) -> CapabilityResult:
     roastable = meta.get("preauth_required") is False
-    etype = meta.get("etype")
+    etype_raw = meta.get("etype")
+    etype = etype_raw if isinstance(etype_raw, int) else None
+    etype_name = ETYPE_NAMES.get(etype, "unknown") if etype is not None else "unknown"
     weak = etype in WEAK_ETYPES
     return CapabilityResult(
         verdict="Confirmed" if roastable else "NotExploitable",
         proof_class="asrep-roastable-no-preauth" if roastable else "asrep-preauth-required",
         assertions=[
             f"Account {'does NOT require' if roastable else 'requires'} Kerberos pre-authentication.",
-            f"AS-REP encryption type: {ETYPE_NAMES.get(etype, 'unknown')}"
+            f"AS-REP encryption type: {etype_name}"
             + (" (weak / crackable)" if weak else ""),
             "The crackable AS-REP blob was NOT returned or exported.",
         ],
         redacted_refs={
             "targetUser": user,
-            "etype": ETYPE_NAMES.get(etype, str(etype)),
+            "etype": etype_name if etype is not None else str(etype_raw),
             "weakEtype": "yes" if weak else "no",
         },
     )

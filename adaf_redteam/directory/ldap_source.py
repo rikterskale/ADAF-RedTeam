@@ -98,7 +98,7 @@ def _mask_to_rights(mask: int, *, object_type_name: str | None) -> list[str]:
     if mask & _CONTROL_ACCESS:
         # Control-access is what extended rights (DCSync, etc.) key off. When the
         # ACE names a specific extended right, promote to that right's name.
-        if object_type_name in EXTENDED_RIGHTS.values():
+        if object_type_name is not None and object_type_name in EXTENDED_RIGHTS.values():
             rights.append(object_type_name)
         else:
             rights.append("ControlAccess")
@@ -144,6 +144,8 @@ def parse_sd_to_aces(raw_sd: bytes, *, attribute_filter: str | None = None) -> l
             continue
         try:
             trustee = body["Sid"].formatCanonical()
+            if not isinstance(trustee, str):
+                continue
         except (AttributeError, KeyError):
             continue
 
@@ -192,6 +194,8 @@ def _trustees_from_sd(raw_sd: bytes) -> list[str]:
             mask = int(body["Mask"]["Mask"])
             trustee = body["Sid"].formatCanonical()
         except (AttributeError, KeyError, TypeError, ValueError):
+            continue
+        if not isinstance(trustee, str):
             continue
         if mask & (_CONTROL_ACCESS | _GENERIC_ALL):
             trustees.append(trustee)

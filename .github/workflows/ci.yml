@@ -44,7 +44,7 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - name: Install development dependencies
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev]" mypy bandit
       - name: Ruff (lint)
         run: ruff check --output-format=github .
       - name: Mypy (type check)
@@ -270,6 +270,7 @@ jobs:
                               member.mtime = 0
                               member.uid = member.gid = 0
                               member.uname = member.gname = ""
+                              member.pax_headers = {}
                               content = source.extractfile(member) if member.isfile() else None
                               target.addfile(member, content)
               os.replace(temporary, path)
@@ -436,7 +437,7 @@ jobs:
           cache: pip
           cache-dependency-path: pyproject.toml
       - name: Install development dependencies
-        run: python -m pip install -e ".[dev]"
+        run: python -m pip install -e ".[dev]" bandit
       - name: Audit installed dependencies
         run: |
           python -m pip freeze --exclude-editable > "$RUNNER_TEMP/requirements-audit.txt"
